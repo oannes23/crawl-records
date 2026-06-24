@@ -1,0 +1,829 @@
+{
+  "components": {
+    "schemas": {
+      "BestEntry": {
+        "properties": {
+          "achievedAt": {
+            "title": "Achievedat",
+            "type": "string"
+          },
+          "classId": {
+            "title": "Classid",
+            "type": "string"
+          },
+          "criterion": {
+            "title": "Criterion",
+            "type": "string"
+          },
+          "dailyDate": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dailydate"
+          },
+          "eventId": {
+            "title": "Eventid",
+            "type": "string"
+          },
+          "foeId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Foeid"
+          },
+          "value": {
+            "title": "Value",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "criterion",
+          "classId",
+          "value",
+          "eventId",
+          "achievedAt"
+        ],
+        "title": "BestEntry",
+        "type": "object"
+      },
+      "BestsResponse": {
+        "properties": {
+          "bests": {
+            "items": {
+              "$ref": "#/components/schemas/BestEntry"
+            },
+            "title": "Bests",
+            "type": "array"
+          }
+        },
+        "required": [
+          "bests"
+        ],
+        "title": "BestsResponse",
+        "type": "object"
+      },
+      "ClientVersions": {
+        "properties": {
+          "contentVersion": {
+            "title": "Contentversion",
+            "type": "string"
+          },
+          "rulesetVersion": {
+            "title": "Rulesetversion",
+            "type": "string"
+          }
+        },
+        "required": [
+          "rulesetVersion",
+          "contentVersion"
+        ],
+        "title": "ClientVersions",
+        "type": "object"
+      },
+      "DailyDescriptor": {
+        "properties": {
+          "contentVersion": {
+            "title": "Contentversion",
+            "type": "string"
+          },
+          "criteria": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Criteria",
+            "type": "array"
+          },
+          "date": {
+            "title": "Date",
+            "type": "string"
+          },
+          "rulesetVersion": {
+            "title": "Rulesetversion",
+            "type": "string"
+          },
+          "seed": {
+            "title": "Seed",
+            "type": "string"
+          },
+          "specRef": {
+            "title": "Specref",
+            "type": "string"
+          }
+        },
+        "required": [
+          "date",
+          "seed",
+          "specRef",
+          "rulesetVersion",
+          "contentVersion",
+          "criteria"
+        ],
+        "title": "DailyDescriptor",
+        "type": "object"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "title": "Detail",
+            "type": "array"
+          }
+        },
+        "title": "HTTPValidationError",
+        "type": "object"
+      },
+      "HandleAvailableResponse": {
+        "properties": {
+          "available": {
+            "title": "Available",
+            "type": "boolean"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "available"
+        ],
+        "title": "HandleAvailableResponse",
+        "type": "object"
+      },
+      "HealthResponse": {
+        "properties": {
+          "consentVersion": {
+            "title": "Consentversion",
+            "type": "string"
+          },
+          "contentVersion": {
+            "title": "Contentversion",
+            "type": "string"
+          },
+          "rulesetVersion": {
+            "title": "Rulesetversion",
+            "type": "string"
+          },
+          "schemaVersion": {
+            "title": "Schemaversion",
+            "type": "integer"
+          },
+          "status": {
+            "const": "ok",
+            "default": "ok",
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "schemaVersion",
+          "rulesetVersion",
+          "contentVersion",
+          "consentVersion"
+        ],
+        "title": "HealthResponse",
+        "type": "object"
+      },
+      "IngestRequest": {
+        "properties": {
+          "records": {
+            "items": {
+              "$ref": "#/components/schemas/RunRecord"
+            },
+            "title": "Records",
+            "type": "array"
+          }
+        },
+        "required": [
+          "records"
+        ],
+        "title": "IngestRequest",
+        "type": "object"
+      },
+      "IngestResponse": {
+        "properties": {
+          "accepted": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Accepted",
+            "type": "array"
+          },
+          "rejected": {
+            "items": {
+              "additionalProperties": {
+                "type": "string"
+              },
+              "type": "object"
+            },
+            "title": "Rejected",
+            "type": "array"
+          }
+        },
+        "required": [
+          "accepted"
+        ],
+        "title": "IngestResponse",
+        "type": "object"
+      },
+      "Integrity": {
+        "description": "Mod gate. ``manifest_hash`` is the reserved slot for the future content-hash gate.",
+        "properties": {
+          "manifestHash": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Manifesthash"
+          },
+          "modded": {
+            "default": false,
+            "title": "Modded",
+            "type": "boolean"
+          }
+        },
+        "title": "Integrity",
+        "type": "object"
+      },
+      "RecoverRequest": {
+        "properties": {
+          "fingerprint": {
+            "title": "Fingerprint",
+            "type": "string"
+          },
+          "recoveryCode": {
+            "title": "Recoverycode",
+            "type": "string"
+          }
+        },
+        "required": [
+          "recoveryCode",
+          "fingerprint"
+        ],
+        "title": "RecoverRequest",
+        "type": "object"
+      },
+      "RecoverResponse": {
+        "properties": {
+          "handle": {
+            "title": "Handle",
+            "type": "string"
+          },
+          "token": {
+            "title": "Token",
+            "type": "string"
+          }
+        },
+        "required": [
+          "token",
+          "handle"
+        ],
+        "title": "RecoverResponse",
+        "type": "object"
+      },
+      "RegisterRequest": {
+        "properties": {
+          "client": {
+            "$ref": "#/components/schemas/ClientVersions"
+          },
+          "consentVersion": {
+            "title": "Consentversion",
+            "type": "string"
+          },
+          "fingerprint": {
+            "title": "Fingerprint",
+            "type": "string"
+          },
+          "handle": {
+            "title": "Handle",
+            "type": "string"
+          }
+        },
+        "required": [
+          "fingerprint",
+          "handle",
+          "consentVersion",
+          "client"
+        ],
+        "title": "RegisterRequest",
+        "type": "object"
+      },
+      "RegisterResponse": {
+        "properties": {
+          "handle": {
+            "title": "Handle",
+            "type": "string"
+          },
+          "recoveryCode": {
+            "title": "Recoverycode",
+            "type": "string"
+          },
+          "token": {
+            "title": "Token",
+            "type": "string"
+          }
+        },
+        "required": [
+          "token",
+          "recoveryCode",
+          "handle"
+        ],
+        "title": "RegisterResponse",
+        "type": "object"
+      },
+      "RunContext": {
+        "properties": {
+          "classId": {
+            "title": "Classid",
+            "type": "string"
+          },
+          "dailyDate": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dailydate"
+          },
+          "foeId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Foeid"
+          },
+          "kind": {
+            "enum": [
+              "delve",
+              "daily"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "seed": {
+            "title": "Seed",
+            "type": "string"
+          },
+          "specRef": {
+            "title": "Specref",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "classId",
+          "seed",
+          "specRef"
+        ],
+        "title": "RunContext",
+        "type": "object"
+      },
+      "RunOutcome": {
+        "properties": {
+          "depthReached": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Depthreached"
+          },
+          "realTimeMs": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Realtimems"
+          },
+          "result": {
+            "enum": [
+              "win",
+              "loss",
+              "flee"
+            ],
+            "title": "Result",
+            "type": "string"
+          },
+          "terms": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Terms"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "RunOutcome",
+        "type": "object"
+      },
+      "RunRecord": {
+        "properties": {
+          "actions": {
+            "items": {},
+            "title": "Actions",
+            "type": "array"
+          },
+          "contentVersion": {
+            "title": "Contentversion",
+            "type": "string"
+          },
+          "context": {
+            "$ref": "#/components/schemas/RunContext"
+          },
+          "eventId": {
+            "title": "Eventid",
+            "type": "string"
+          },
+          "fingerprint": {
+            "title": "Fingerprint",
+            "type": "string"
+          },
+          "instruments": {
+            "additionalProperties": true,
+            "title": "Instruments",
+            "type": "object"
+          },
+          "integrity": {
+            "$ref": "#/components/schemas/Integrity"
+          },
+          "outcome": {
+            "$ref": "#/components/schemas/RunOutcome"
+          },
+          "rulesetVersion": {
+            "title": "Rulesetversion",
+            "type": "string"
+          },
+          "schemaVersion": {
+            "title": "Schemaversion",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "eventId",
+          "fingerprint",
+          "schemaVersion",
+          "rulesetVersion",
+          "contentVersion",
+          "context",
+          "outcome"
+        ],
+        "title": "RunRecord",
+        "type": "object"
+      },
+      "ValidationError": {
+        "properties": {
+          "ctx": {
+            "title": "Context",
+            "type": "object"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "title": "Location",
+            "type": "array"
+          },
+          "msg": {
+            "title": "Message",
+            "type": "string"
+          },
+          "type": {
+            "title": "Error Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError",
+        "type": "object"
+      }
+    },
+    "securitySchemes": {
+      "HTTPBearer": {
+        "scheme": "bearer",
+        "type": "http"
+      }
+    }
+  },
+  "info": {
+    "summary": "The online backend for SET.crawl \u2014 run ingest, daily challenge, personal bests.",
+    "title": "set-embassy",
+    "version": "0.1.0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/daily": {
+      "get": {
+        "operationId": "daily_daily_get",
+        "parameters": [
+          {
+            "description": "YYYY-MM-DD; defaults to today (UTC)",
+            "in": "query",
+            "name": "date",
+            "required": false,
+            "schema": {
+              "default": "",
+              "description": "YYYY-MM-DD; defaults to today (UTC)",
+              "title": "Date",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DailyDescriptor"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Daily",
+        "tags": [
+          "embassy"
+        ]
+      }
+    },
+    "/handle/available": {
+      "get": {
+        "operationId": "handle_available_handle_available_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "maxLength": 64,
+              "minLength": 1,
+              "title": "Name",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HandleAvailableResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Handle Available",
+        "tags": [
+          "embassy"
+        ]
+      }
+    },
+    "/health": {
+      "get": {
+        "operationId": "health_health_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Health",
+        "tags": [
+          "embassy"
+        ]
+      }
+    },
+    "/ingest": {
+      "post": {
+        "operationId": "ingest_ingest_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IngestRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IngestResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Ingest",
+        "tags": [
+          "embassy"
+        ]
+      }
+    },
+    "/me/bests": {
+      "get": {
+        "operationId": "me_bests_me_bests_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BestsResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Me Bests",
+        "tags": [
+          "embassy"
+        ]
+      }
+    },
+    "/recover": {
+      "post": {
+        "operationId": "recover_recover_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecoverRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecoverResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Recover",
+        "tags": [
+          "embassy"
+        ]
+      }
+    },
+    "/register": {
+      "post": {
+        "operationId": "register_register_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RegisterResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Register",
+        "tags": [
+          "embassy"
+        ]
+      }
+    }
+  }
+}

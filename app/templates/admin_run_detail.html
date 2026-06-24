@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}run {{ run.event_id }}{% endblock %}
+{% block body %}
+<h1>Run <code>{{ run.event_id }}</code></h1>
+<p><a href="/admin/runs">← back to runs</a></p>
+<div class="card">
+  <table>
+    <tr><th>fingerprint</th><td>{{ run.fingerprint }}</td></tr>
+    <tr><th>kind</th><td>{{ run.kind }}{% if run.daily_date %} ({{ run.daily_date }}){% endif %}</td></tr>
+    <tr><th>class / foe</th><td>{{ run.class_id }} / {{ run.foe_id or "—" }}</td></tr>
+    <tr><th>result</th><td class="{{ 'good' if run.result=='win' else ('bad' if run.result=='loss' else '') }}">{{ run.result }}</td></tr>
+    <tr><th>terms / time / depth</th><td>{{ run.terms }} / {{ run.real_time_ms }}ms / {{ run.depth_reached }}</td></tr>
+    <tr><th>seed / specRef</th><td>{{ run.seed }} / {{ run.spec_ref }}</td></tr>
+    <tr><th>versions</th><td>schema {{ run.schema_version }} · ruleset {{ run.ruleset_version }} · content {{ run.content_version }}</td></tr>
+    <tr><th>integrity</th><td>modded={{ run.modded }} · manifestHash={{ run.manifest_hash or "—" }}</td></tr>
+    <tr><th>created</th><td>{{ run.created_at }}</td></tr>
+  </table>
+</div>
+<div class="card">
+  <h3>instruments <span class="muted">(open dev-stat blob)</span></h3>
+  <pre>{{ run.instruments | tojson(indent=2) }}</pre>
+</div>
+<div class="card">
+  <h3>actions <span class="muted">(opaque, replay-ready — {{ run.actions|length }} entries)</span></h3>
+  <pre>{{ run.actions | tojson(indent=2) }}</pre>
+</div>
+{% endblock %}

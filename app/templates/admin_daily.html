@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}daily{% endblock %}
+{% block body %}
+<h1>Daily inspector</h1>
+<form class="filters" method="get">
+  <input name="date" placeholder="YYYY-MM-DD (blank = today UTC)" value="{{ date }}" size="30">
+  <button type="submit">inspect</button>
+</form>
+{% if descriptor %}
+<div class="card">
+  <table>
+    <tr><th>date</th><td>{{ descriptor.date }}</td></tr>
+    <tr><th>seed</th><td><code>{{ descriptor.seed }}</code></td></tr>
+    <tr><th>specRef</th><td>{{ descriptor.spec_ref }}</td></tr>
+    <tr><th>versions</th><td>ruleset {{ descriptor.ruleset_version }} · content {{ descriptor.content_version }}</td></tr>
+    <tr><th>criteria</th><td>{{ descriptor.criteria | join(", ") }}</td></tr>
+  </table>
+  <p class="muted">Deterministic: the same date on the same versions always yields this descriptor.</p>
+</div>
+{% else %}
+<p class="bad">Invalid date — use YYYY-MM-DD.</p>
+{% endif %}
+{% endblock %}

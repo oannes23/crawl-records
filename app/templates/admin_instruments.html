@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}instruments{% endblock %}
+{% block body %}
+<h1>Dev instruments <span class="muted">({{ agg.total_runs }} runs)</span></h1>
+<p class="muted">Aggregated from the open <code>instruments</code> blob. Targets per
+TUNING.md §"Dev-instrument design targets".</p>
+<div style="display:flex; gap:1rem; flex-wrap:wrap;">
+  {% set avgs = agg.averages %}
+  <div class="card" style="min-width:200px;">
+    <div class="muted">reshape share (player)</div>
+    <div class="kpi">{{ "%.1f%%"|format(avgs.reshareSharePlayer*100) if avgs.reshareSharePlayer is not none else "—" }}</div>
+    <div class="muted">target {{ agg.targets.reshareSharePlayer }} · n={{ agg.counts.reshareSharePlayer }}</div>
+  </div>
+  <div class="card" style="min-width:200px;">
+    <div class="muted">trap-spring rate</div>
+    <div class="kpi">{{ "%.1f%%"|format(avgs.trapSpringRate*100) if avgs.trapSpringRate is not none else "—" }}</div>
+    <div class="muted">target {{ agg.targets.trapSpringRate }} · n={{ agg.counts.trapSpringRate }}</div>
+  </div>
+  <div class="card" style="min-width:200px;">
+    <div class="muted">sets / round</div>
+    <div class="kpi">{{ "%.2f"|format(avgs.setsPerRound) if avgs.setsPerRound is not none else "—" }}</div>
+    <div class="muted">target {{ agg.targets.setsPerRound }} · n={{ agg.counts.setsPerRound }}</div>
+  </div>
+  <div class="card" style="min-width:200px;">
+    <div class="muted">sets matched (avg)</div>
+    <div class="kpi">{{ "%.1f"|format(avgs.setsMatched) if avgs.setsMatched is not none else "—" }}</div>
+    <div class="muted">n={{ agg.counts.setsMatched }}</div>
+  </div>
+</div>
+<p class="muted">The <code>instruments</code> blob is open/extensible — new keys the client
+emits land here without a schema change; add KPIs as the corpus grows.</p>
+{% endblock %}

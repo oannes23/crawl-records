@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}bests{% endblock %}
+{% block body %}
+<h1>Bests explorer</h1>
+<form class="filters" method="get">
+  <input name="fingerprint" placeholder="fingerprint" value="{{ fingerprint }}" size="40">
+  <button type="submit">compute</button>
+</form>
+{% if fingerprint %}
+<table>
+  <thead><tr><th>criterion</th><th>class</th><th>foe</th><th>daily</th><th>value</th><th>eventId</th><th>achievedAt</th></tr></thead>
+  <tbody>
+  {% for b in bests %}
+    <tr>
+      <td>{{ b.criterion }}</td><td>{{ b.class_id }}</td><td>{{ b.foe_id or "—" }}</td>
+      <td>{{ b.daily_date or "—" }}</td><td class="good">{{ b.value }}</td>
+      <td><a href="/admin/runs/{{ b.event_id }}">{{ b.event_id[:8] }}…</a></td>
+      <td class="muted">{{ b.achieved_at[:19].replace("T"," ") }}</td>
+    </tr>
+  {% else %}
+    <tr><td colspan="7" class="muted">no bests for this fingerprint</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<p class="muted">Enter a fingerprint to compute its personal bests. (Find one on the
+<a href="/admin/identities">identities</a> page.)</p>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block title %}runs{% endblock %}
+{% block body %}
+<h1>Runs</h1>
+<div class="filters">
+  <input id="f-handle" placeholder="handle">
+  <input id="f-fingerprint" placeholder="fingerprint">
+  <input id="f-class" placeholder="classId">
+  <input id="f-foe" placeholder="foeId">
+  <select id="f-kind"><option value="">kind: any</option><option>delve</option><option>daily</option></select>
+  <select id="f-result"><option value="">result: any</option><option>win</option><option>loss</option><option>flee</option></select>
+  <input id="f-ruleset" placeholder="rulesetVersion">
+  <button id="apply">filter</button>
+</div>
+<p class="muted" id="summary"></p>
+<table>
+  <thead>
+    <tr>
+      <th data-sort="created_at">when</th>
+      <th>handle/fp</th>
+      <th data-sort="class_id">class</th>
+      <th data-sort="foe_id">foe</th>
+      <th>kind</th>
+      <th>result</th>
+      <th data-sort="terms">terms</th>
+      <th data-sort="real_time_ms">time(ms)</th>
+      <th data-sort="depth_reached">depth</th>
+      <th>versions</th>
+    </tr>
+  </thead>
+  <tbody id="rows"></tbody>
+</table>
+
+<script>
+let sort = "created_at", desc = true;
+const $ = id => document.getElementById(id);
+
+function qs() {
+  const p = new URLSearchParams();
+  const add = (k, v) => { if (v) p.set(k, v); };
+  add("handle", $("f-handle").value.trim());
+  add("fingerprint", $("f-fingerprint").value.trim());
+  add("class_id", $("f-class").value.trim());
+  add("foe_id", $("f-foe").value.trim());
+  add("kind", $("f-kind").value);
+  add("result", $("f-result").value);
+  add("ruleset_version", $("f-ruleset").value.trim());
+  p.set("sort", sort); p.set("desc", desc);
+  return p.toString();
+}
+
+async function load() {
+  const res = await fetch("/admin/api/runs?" + qs());
+  const data = await res.json();
+  $("summary").textContent = `${data.total} run(s) — showing ${data.runs.length}`;
+  $("rows").innerHTML = data.runs.map(r => `
+    <tr>
+      <td class="muted">${(r.createdAt||"").replace("T"," ").slice(0,19)}</td>
+      <td title="${r.fingerprint}">${r.fingerprint.slice(0,8)}…</td>
+      <td>${r.classId||""}</td>
+      <td>${r.foeId||""}</td>
+      <td>${r.kind}${r.dailyDate ? " "+r.dailyDate : ""}</td>
+      <td class="${r.result==='win'?'good':(r.result==='loss'?'bad':'')}">${r.result}</td>
+      <td>${r.terms ?? ""}</td>
+      <td>${r.realTimeMs ?? ""}</td>
+      <td>${r.depthReached ?? ""}</td>
+      <td class="muted">${r.rulesetVersion}/${r.contentVersion}</td>
+    </tr>
+    <tr><td colspan="10"><a href="/admin/runs/${encodeURIComponent(r.eventId)}">${r.eventId}</a></td></tr>
+  `).join("");
+}
+
+$("apply").onclick = load;
+document.querySelectorAll("th[data-sort]").forEach(th => th.onclick = () => {
+  const s = th.dataset.sort;
+  if (sort === s) desc = !desc; else { sort = s; desc = true; }
+  load();
+});
+load();
+</script>
+{% endblock %}

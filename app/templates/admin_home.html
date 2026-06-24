@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}overview{% endblock %}
+{% block body %}
+<h1>Embassy admin — overview</h1>
+<div class="card">
+  <p>Read-only browse over the run corpus. This panel is for <strong>operators</strong>;
+  it is separate from the game-client Embassy and excluded from the published client
+  OpenAPI contract.</p>
+  <ul>
+    <li><a href="/admin/runs">Runs</a> — filter/sort every uploaded run; drill into the raw action log + instruments.</li>
+    <li><a href="/admin/identities">Identities</a> — handles, consent, run counts (recovery codes are hashed, never shown).</li>
+    <li><a href="/admin/bests">Bests</a> — the personal-bests query for any fingerprint, freely sliced.</li>
+    <li><a href="/admin/daily">Daily</a> — inspect the deterministic descriptor for any date.</li>
+    <li><a href="/admin/instruments">Instruments</a> — aggregate the TUNING.md dev-instrument targets across the corpus.</li>
+    <li><a href="/admin/health">Health</a> — advertised versions + config posture.</li>
+  </ul>
+</div>
+{% endblock %}

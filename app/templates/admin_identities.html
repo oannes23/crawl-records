@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}identities{% endblock %}
+{% block body %}
+<h1>Identities <span class="muted">({{ identities|length }})</span></h1>
+<table>
+  <thead><tr><th>handle</th><th>fingerprint</th><th>consent</th><th>since</th><th>runs</th></tr></thead>
+  <tbody>
+  {% for i in identities %}
+    <tr>
+      <td>{{ i.handle }}</td>
+      <td class="muted">{{ i.fingerprint }}</td>
+      <td>v{{ i.consent_version }} <span class="muted">{{ (i.consent_at or "")[:10] }}</span></td>
+      <td class="muted">{{ (i.created_at or "")[:10] }}</td>
+      <td><a href="/admin/bests?fingerprint={{ i.fingerprint }}">{{ i.runs }}</a></td>
+    </tr>
+  {% else %}
+    <tr><td colspan="5" class="muted">no identities yet</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+<p class="muted">Recovery codes are stored hashed and never displayed.</p>
+{% endblock %}

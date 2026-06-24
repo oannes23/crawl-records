@@ -216,3 +216,8 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Embassy local SQLite databases
+*.db
+ci.db
+test.db

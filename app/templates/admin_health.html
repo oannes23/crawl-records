@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}health{% endblock %}
+{% block body %}
+<h1>Health &amp; versions</h1>
+<div class="card">
+  <table>
+    <tr><th>schemaVersion</th><td>{{ settings.schema_version }}</td></tr>
+    <tr><th>rulesetVersion</th><td><code>{{ settings.ruleset_version }}</code></td></tr>
+    <tr><th>contentVersion</th><td><code>{{ settings.content_version }}</code></td></tr>
+    <tr><th>consentVersion</th><td>{{ settings.consent_version }}</td></tr>
+    <tr><th>ingest enabled</th><td class="{{ 'good' if settings.enable_ingest else 'bad' }}">{{ settings.enable_ingest }}</td></tr>
+    <tr><th>max batch</th><td>{{ settings.max_batch }}</td></tr>
+    <tr><th>database</th><td>{{ "sqlite" if settings.is_sqlite else "postgres/other" }}</td></tr>
+  </table>
+</div>
+<p class="muted">These versions are what <code>GET /health</code> advertises to clients.</p>
+{% endblock %}
