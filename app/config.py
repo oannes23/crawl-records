@@ -33,6 +33,12 @@ class Settings(BaseSettings):
     enable_ingest: bool = True
     max_batch: int = 100
 
+    # --- daily authoring (SERVICE-REPLY.md item 1, path b) -------------------
+    # Optional path to a JSON file mapping "YYYY-MM-DD" -> a daily spec object
+    # ({classId, foeId, dungeonId, params}). When a date is present the descriptor carries
+    # that authored spec; otherwise the client derives selections from the seed (path a).
+    daily_file: str | None = None
+
     @property
     def is_sqlite(self) -> bool:
         return self.database_url.startswith("sqlite")

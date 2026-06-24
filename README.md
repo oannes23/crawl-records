@@ -37,6 +37,15 @@ All config is environment-driven (see `app/config.py`). Defaults run a local SQL
 | `EMBASSY_CONSENT_VERSION` | `1` | Current consent-text version. |
 | `EMBASSY_ENABLE_INGEST` | `true` | Master switch for accepting run uploads. |
 | `EMBASSY_MAX_BATCH` | `100` | Max run records per `/ingest` call. |
+| `EMBASSY_DAILY_FILE` | `None` | Optional path to a `{ "YYYY-MM-DD": {classId, foeId, dungeonId, params} }` JSON map for **authored** dailies. Unset ⇒ clients derive the daily from the seed alone. |
+
+### Publishing new content/ruleset versions
+
+The server learns the "current official" versions only from `EMBASSY_RULESET_VERSION` /
+`EMBASSY_CONTENT_VERSION`. **The publish workflow is: bump those env vars and redeploy** when
+new client content ships. There is no server-side content store. Because the daily seed folds
+in the versions, **bumping a version mid-day silently re-rolls that date's board** — bump at
+the UTC day boundary, not mid-day.
 
 ### Switching to Postgres
 

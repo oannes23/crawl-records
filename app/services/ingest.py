@@ -12,14 +12,21 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.models import Identity, Run
-from app.schemas import IngestResponse, RunRecord
+from app.schemas import IngestResponse, RejectedRecord, RunRecord
+
+# Every MVP reject is permanent: the client should quarantine/drop these, not retry
+# (SERVICE-REPLY.md item 4). A future retryable reason would be emitted with terminal=False.
+_TERMINAL_REASONS = ("modded", "fingerprint-mismatch", "missing-version")
 
 
 def ingest_records(
     db: Session, caller: Identity, records: list[RunRecord]
 ) -> IngestResponse:
     accepted: list[str] = []
-    rejected: list[dict[str, str]] = []
+    rejected: list[RejectedRecord] = []
+
+    def reject(event_id: str, reason: str) -> None:
+        rejected.append(RejectedRecord(event_id=event_id, reason=reason, terminal=True))
 
     # which of these event_ids already exist? (idempotency)
     incoming_ids = [r.event_id for r in records]
@@ -34,13 +41,13 @@ def ingest_records(
     for rec in records:
         # --- gates -----------------------------------------------------------
         if rec.integrity.modded:
-            rejected.append({"eventId": rec.event_id, "reason": "modded"})
+            reject(rec.event_id, "modded")
             continue
         if rec.fingerprint != caller.fingerprint:
-            rejected.append({"eventId": rec.event_id, "reason": "fingerprint-mismatch"})
+            reject(rec.event_id, "fingerprint-mismatch")
             continue
         if not rec.ruleset_version or not rec.content_version:
-            rejected.append({"eventId": rec.event_id, "reason": "missing-version"})
+            reject(rec.event_id, "missing-version")
             continue
 
         # --- idempotency -----------------------------------------------------

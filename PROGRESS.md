@@ -103,6 +103,20 @@ the acceptance criteria in `SERVICE.md` §8. Companion: `CLAUDE.md` (orientation
 - ✅ Payload caps → `max_batch` (default 100) + `enable_ingest` master switch
 - ⬜ Hosting target + deploy doc → STILL OPEN (recommend Fly/Railway-class; not blocking)
 
+## SERVICE-REPLY.md follow-ups (answered 2026-06-23 — see `SERVICE-REPLY-RESPONSE.md`)
+- ✅ Item 1: optional authored-daily `spec` on `/daily` (path b shape shipped; path a default) — `EMBASSY_DAILY_FILE`; `test_reply_followups.py`
+- ✅ Item 2: version source = operator env config; publish = bump+redeploy; "don't bump mid-day" documented (README/.env.example)
+- ✅ Item 3: `/recover` re-issues a token for the original fingerprint (token-only loss) — confirmed + tested
+- ✅ Item 4: `rejected` entries carry `terminal: bool`; the three MVP reasons are terminal — `test_reply_followups.py`
+- ⏸️ Item 5 (phase-2): `fastest-clear` not replay-verifiable — logged in phase-2 ledger
+- ⏸️ Item 6 (phase-2): `consentVersion` bump → re-prompt on next visit — spec line when consent text changes
+
+## Pre-public hardening (tracked; not blocking client handoff)
+- ⬜ Recovery-code entropy + rate-limit + KDF (current: 4 words, unsalted sha256, O(n) scan)
+- ⬜ Per-request payload-size cap + rate limiting on `/ingest`
+- ⬜ Concurrency test for parallel handle claims (Postgres)
+- ⬜ Token expiry/rotation; structured logging + metrics
+
 ## Phase-2 seam (NOT built)
 Cross-player leaderboards · content/asset download · server-side replay verification ·
 signed-content anti-cheat · social/accounts. Data is captured replay-ready; the bests query

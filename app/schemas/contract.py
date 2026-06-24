@@ -113,9 +113,21 @@ class IngestRequest(_Wire):
     records: list[RunRecord]
 
 
+class RejectedRecord(_Wire):
+    """A per-record ingest rejection. ``terminal`` tells the client whether to quarantine/
+    drop the record (true) or keep it in the outbox and retry (false). Every reason the MVP
+    emits — ``modded``, ``missing-version``, ``fingerprint-mismatch`` — is terminal. Any
+    future retryable reject will carry ``terminal: false`` so the client branches on the
+    boolean, never on parsing the reason string."""
+
+    event_id: str
+    reason: str
+    terminal: bool = True
+
+
 class IngestResponse(_Wire):
     accepted: list[str]  # the event_ids stored/confirmed (idempotent)
-    rejected: list[dict[str, str]] = Field(default_factory=list)  # [{eventId, reason}]
+    rejected: list[RejectedRecord] = Field(default_factory=list)
 
 
 # --- /me/bests ---------------------------------------------------------------
@@ -138,6 +150,23 @@ class BestsResponse(_Wire):
 # --- /daily ------------------------------------------------------------------
 
 
+class DailySpec(_Wire):
+    """An OPTIONAL authored-daily channel (SERVICE-REPLY.md item 1, path b).
+
+    When present, the client uses these selections instead of deriving them from ``seed``;
+    every id is validated against the client's LOCAL registry (an unknown id ⇒ the daily is
+    unavailable, handled exactly like a version mismatch — never a content download). When
+    ``spec`` is absent the client derives all selections from ``seed`` alone (path a, the MVP
+    default). The field exists now so authored dailies are not a future schema break.
+    ``params`` is an open object for per-daily knobs (modifiers, mutators) the client reads.
+    """
+
+    class_id: str | None = None
+    foe_id: str | None = None
+    dungeon_id: str | None = None
+    params: dict[str, Any] = Field(default_factory=dict)
+
+
 class DailyDescriptor(_Wire):
     date: str
     seed: str
@@ -145,6 +174,7 @@ class DailyDescriptor(_Wire):
     ruleset_version: str
     content_version: str
     criteria: list[str]
+    spec: DailySpec | None = None  # absent ⇒ derive selections from seed (path a)
 
 
 # --- /health -----------------------------------------------------------------

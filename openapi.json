@@ -115,6 +115,16 @@
             "title": "Seed",
             "type": "string"
           },
+          "spec": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DailySpec"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "specRef": {
             "title": "Specref",
             "type": "string"
@@ -129,6 +139,51 @@
           "criteria"
         ],
         "title": "DailyDescriptor",
+        "type": "object"
+      },
+      "DailySpec": {
+        "description": "An OPTIONAL authored-daily channel (SERVICE-REPLY.md item 1, path b).\n\nWhen present, the client uses these selections instead of deriving them from ``seed``;\nevery id is validated against the client's LOCAL registry (an unknown id \u21d2 the daily is\nunavailable, handled exactly like a version mismatch \u2014 never a content download). When\n``spec`` is absent the client derives all selections from ``seed`` alone (path a, the MVP\ndefault). The field exists now so authored dailies are not a future schema break.\n``params`` is an open object for per-daily knobs (modifiers, mutators) the client reads.",
+        "properties": {
+          "classId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Classid"
+          },
+          "dungeonId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dungeonid"
+          },
+          "foeId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Foeid"
+          },
+          "params": {
+            "additionalProperties": true,
+            "title": "Params",
+            "type": "object"
+          }
+        },
+        "title": "DailySpec",
         "type": "object"
       },
       "HTTPValidationError": {
@@ -223,10 +278,7 @@
           },
           "rejected": {
             "items": {
-              "additionalProperties": {
-                "type": "string"
-              },
-              "type": "object"
+              "$ref": "#/components/schemas/RejectedRecord"
             },
             "title": "Rejected",
             "type": "array"
@@ -345,6 +397,30 @@
           "handle"
         ],
         "title": "RegisterResponse",
+        "type": "object"
+      },
+      "RejectedRecord": {
+        "description": "A per-record ingest rejection. ``terminal`` tells the client whether to quarantine/\ndrop the record (true) or keep it in the outbox and retry (false). Every reason the MVP\nemits \u2014 ``modded``, ``missing-version``, ``fingerprint-mismatch`` \u2014 is terminal. Any\nfuture retryable reject will carry ``terminal: false`` so the client branches on the\nboolean, never on parsing the reason string.",
+        "properties": {
+          "eventId": {
+            "title": "Eventid",
+            "type": "string"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          },
+          "terminal": {
+            "default": true,
+            "title": "Terminal",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "eventId",
+          "reason"
+        ],
+        "title": "RejectedRecord",
         "type": "object"
       },
       "RunContext": {
