@@ -91,6 +91,32 @@ def test_overlong_event_id_rejected(client):
     assert r.status_code == 422, r.text
 
 
+# --- batch semantics: a pydantic violation fails the WHOLE batch ------------
+
+
+def test_one_invalid_record_fails_the_whole_batch(client):
+    """Pins the documented tradeoff (FABLE B2 / QA finding #2): a schema-level violation
+    (bounds/charset/kind) is a raw 422 that rejects the ENTIRE /ingest batch — unlike a
+    business-gate reject (modded, event-id-conflict) which partial-accepts. A conforming
+    client never sends malformed records; if this behavior ever changes to per-record
+    rejection, update SERVICE-RESPONSE.md and this test together."""
+    tok = register(client)["token"]
+    r = client.post(
+        "/ingest",
+        json={
+            "records": [
+                run_record("good-0"),
+                run_record("good-1"),
+                run_record("bad", outcome={"result": "win", "terms": -1}),
+            ]
+        },
+        headers=_auth(tok),
+    )
+    assert r.status_code == 422, r.text
+    # nothing from the batch was stored — not even the two valid records
+    assert client.get("/me/bests", headers=_auth(tok)).json()["bests"] == []
+
+
 # --- B2: outcome bounds -----------------------------------------------------
 
 

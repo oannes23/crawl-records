@@ -38,6 +38,17 @@ def test_admin_runs_json_and_detail(client):
     assert "e1" in detail.text
 
 
+def test_admin_runs_json_handle_no_match(client):
+    """A3: a handle filter that resolves to no fingerprint matches zero runs (via
+    sqlalchemy false()), not everything and not an error."""
+    tok = register(client)["token"]
+    client.post("/ingest", json={"records": [run_record("e1")]}, headers=_auth(tok))
+
+    data = client.get("/admin/api/runs", auth=ADMIN, params={"handle": "NobodyHere"}).json()
+    assert data["total"] == 0
+    assert data["runs"] == []
+
+
 def test_admin_instruments_aggregate(client):
     tok = register(client)["token"]
     client.post(

@@ -84,6 +84,17 @@ register/recover, bound to the fingerprint). `/health`, `/handle/available`, `/r
   already belongs to a **different** identity — never reported accepted, so the client must
   not prune it). An already-stored or in-batch-duplicate `eventId` **owned by the caller** is
   reported in **`accepted`** (idempotent, first-write-wins), never double-stored or updated.
+- **Two failure surfaces, by layer.** The `accepted`/`rejected` split above is for
+  *business-gate* failures — the batch still returns `200` with an `IngestResponse`. A
+  *schema-level* violation (a field out of bounds, a bad handle charset, or a `kind`/
+  `dailyDate` mismatch) is caught by pydantic **before** the handler runs and returns a raw
+  `422` whose body is FastAPI's validation error (not an `IngestResponse`) — and it fails the
+  **entire batch**, so none of the co-submitted valid records are stored either. A conforming
+  client never emits such records, but an outbox implementation should treat a `422` as
+  "this batch is malformed, do not prune anything" and must not assume the body is an
+  `IngestResponse`. (Rationale: a client producing out-of-range values is broken; see FABLE
+  B2. If a future need arises to accept the good records alongside a malformed one, move that
+  specific bound to a per-record `terminal` reject.)
 - **Bests criteria:** `fewest-terms` (min terms, wins only), `fastest-clear` (min realTimeMs,
   wins only), `deepest-delve` (max depthReached, counts losses too). Sliced per
   `(classId × foeId)`; daily runs slice additionally by `dailyDate`.
