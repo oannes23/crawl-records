@@ -15,6 +15,7 @@ run that was never stored (FABLE B1). Such records are rejected ``event-id-confl
 from __future__ import annotations
 
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.models import Identity, Run
@@ -45,12 +46,7 @@ def ingest_records(
 
     # which of these event_ids already exist, and under whose fingerprint? (idempotency +
     # cross-owner conflict detection)
-    incoming_ids = [r.event_id for r in records]
-    owner_by_id: dict[str, str] = dict(
-        db.execute(
-            select(Run.event_id, Run.fingerprint).where(Run.event_id.in_(incoming_ids))
-        ).all()
-    )
+    owner_by_id = _existing_owners(db, [r.event_id for r in records])
 
     seen_in_batch: set[str] = set()
 
@@ -84,12 +80,34 @@ def ingest_records(
             accepted.append(rec.event_id)
             continue
 
-        db.add(_to_row(rec))
+        # New row. Wrap the insert in a SAVEPOINT so that a race — another writer commits
+        # this same new event_id between our pre-check and flush (two devices double-tapping
+        # sync) — rolls back just this row instead of raising an unhandled IntegrityError
+        # that 500s and un-acks the whole batch (FABLE C1). The loser of the race treats it
+        # as an idempotent duplicate and reports it accepted. Portable: no dialect-specific
+        # upsert; SQLite masks this locally but Postgres would not.
+        try:
+            with db.begin_nested():
+                db.add(_to_row(rec))
+                db.flush()
+        except IntegrityError:
+            accepted.append(rec.event_id)
+            seen_in_batch.add(rec.event_id)
+            continue
         seen_in_batch.add(rec.event_id)
         accepted.append(rec.event_id)
 
     db.commit()
     return IngestResponse(accepted=accepted, rejected=rejected)
+
+
+def _existing_owners(db: Session, incoming_ids: list[str]) -> dict[str, str]:
+    """Map each already-stored ``event_id`` in ``incoming_ids`` to its owner fingerprint."""
+    return dict(
+        db.execute(
+            select(Run.event_id, Run.fingerprint).where(Run.event_id.in_(incoming_ids))
+        ).all()
+    )
 
 
 def _to_row(rec: RunRecord) -> Run:

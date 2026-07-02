@@ -5,6 +5,7 @@ from __future__ import annotations
 from sqlalchemy import func, select
 
 from app.models import Run
+from app.services import ingest as ingest_svc
 from tests.conftest import register, run_record
 
 
@@ -82,3 +83,36 @@ def test_cross_owner_event_id_is_conflict_not_silent_loss(client, engine):
         total = conn.execute(select(func.count()).select_from(Run)).scalar_one()
     assert owner == "fp-a"
     assert total == 1
+
+
+def test_first_insert_race_is_absorbed_not_500(client, engine, monkeypatch):
+    """FABLE C1: if a new eventId is committed by another writer between our idempotency
+    pre-check and our flush, the per-record SAVEPOINT absorbs the IntegrityError — the
+    batch still 200s, the sibling record commits, and the raced id is reported accepted
+    (not double-stored). We simulate the race window by blinding the pre-check to a row
+    that already exists at flush time."""
+    tok = register(client, handle="Racer", fingerprint="fp-r")["token"]
+    # e1 already stored (as if a concurrent sync landed it first)
+    client.post("/ingest", json={"records": [run_record("e1", fingerprint="fp-r")]}, headers=_auth(tok))
+
+    # blind the pre-check so e1 looks new → the insert path runs and hits the live PK
+    monkeypatch.setattr(ingest_svc, "_existing_owners", lambda db, ids: {})
+
+    r = client.post(
+        "/ingest",
+        json={
+            "records": [
+                run_record("e1", fingerprint="fp-r"),  # collides at flush
+                run_record("e2", fingerprint="fp-r"),  # sibling must still commit
+            ]
+        },
+        headers=_auth(tok),
+    )
+    assert r.status_code == 200, r.text
+    assert set(r.json()["accepted"]) == {"e1", "e2"}
+
+    with engine.connect() as conn:
+        per_id = dict(
+            conn.execute(select(Run.event_id, func.count()).group_by(Run.event_id)).all()
+        )
+    assert per_id == {"e1": 1, "e2": 1}  # e1 not doubled; e2 committed despite the race

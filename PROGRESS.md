@@ -153,8 +153,9 @@ changes keep `schemaVersion` at 1 — do not break it in phase R1/R2.
   `unsupported-schema-version` (terminal). Documented in SERVICE-RESPONSE.md. `test_versioning.py`.
 - ✅ **B3** (P2) `/daily` date normalization — `strptime`→`strftime` round-trip so `2026-7-1` ==
   `2026-07-01` (same seed + same bests slice). `test_daily.py`.
-- ⬜ **C1** (P2) Per-record `IntegrityError` handling — `begin_nested()` per insert so a raced
+- ✅ **C1** (P2) Per-record `IntegrityError` handling — `begin_nested()` per insert so a raced
   first-time `eventId` is treated as duplicate-accepted, not a 500 that drops the whole batch.
+  `test_idempotency.py` (race simulated by blinding the pre-check).
 - ⬜ **Cleanup bundle** (one PR): **D1** align "upsert"→first-write-wins wording (CLAUDE.md/
   SERVICE-RESPONSE.md/docstring) · **D2** use-or-delete `_TERMINAL_REASONS` · **C6** dedupe the
   `accepted` list (`dict.fromkeys`) + tighten test to `== 1` · **C5** 401-not-403 on missing bearer
