@@ -144,8 +144,8 @@ changes keep `schemaVersion` at 1 — do not break it in phase R1/R2.
   `^[A-Za-z0-9][A-Za-z0-9 _\-]{0,31}$` or a valid client handle can 422. **Client mirror pending.**
 - ✅ **B2** (P1) Outcome bounds — `Field(ge=0)` + sane upper caps on `terms`/`realTimeMs`/
   `depthReached`; negatives no longer become personal bests. `test_validation.py`.
-- ⬜ **B4** (P1) `kind`/`dailyDate` cross-validation — `model_validator`: `daily` ⇔ dated,
-  `delve` ⇒ null; today a null-dated daily pollutes the delve bests slice. Test: both bad combos → 422.
+- ✅ **B4** (P1) `kind`/`dailyDate` cross-validation — `model_validator`: `daily` ⇔ dated,
+  `delve` ⇒ null; a null-dated daily no longer pollutes the delve bests slice. `test_validation.py`.
 - ⬜ **B1** (P1) Fingerprint-scoped idempotency + `event-id-conflict` terminal reject — cross-player
   `eventId` collision currently reports `accepted` and silently destroys the victim's run.
   Test: two identities, same `eventId`; 2nd gets `event-id-conflict`, row count unchanged.

@@ -132,3 +132,43 @@ def test_outcome_boundary_values_pass(client):
     )
     assert r.status_code == 200, r.text
     assert r.json()["accepted"] == ["e1"]
+
+
+# --- B4: kind/dailyDate cross-validation ------------------------------------
+
+
+def test_daily_without_date_rejected(client):
+    tok = register(client)["token"]
+    r = client.post(
+        "/ingest",
+        json={"records": [run_record("e1", context={"kind": "daily", "dailyDate": None})]},
+        headers=_auth(tok),
+    )
+    assert r.status_code == 422, r.text
+    assert client.get("/me/bests", headers=_auth(tok)).json()["bests"] == []
+
+
+def test_delve_with_date_rejected(client):
+    tok = register(client)["token"]
+    r = client.post(
+        "/ingest",
+        json={"records": [run_record("e1", context={"kind": "delve", "dailyDate": "2026-07-01"})]},
+        headers=_auth(tok),
+    )
+    assert r.status_code == 422, r.text
+
+
+def test_valid_daily_and_delve_pass(client):
+    tok = register(client)["token"]
+    r = client.post(
+        "/ingest",
+        json={
+            "records": [
+                run_record("d1", context={"kind": "delve", "dailyDate": None}),
+                run_record("d2", context={"kind": "daily", "dailyDate": "2026-07-01"}),
+            ]
+        },
+        headers=_auth(tok),
+    )
+    assert r.status_code == 200, r.text
+    assert set(r.json()["accepted"]) == {"d1", "d2"}

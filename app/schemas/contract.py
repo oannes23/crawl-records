@@ -12,7 +12,9 @@ from __future__ import annotations
 
 from typing import Annotated, Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, StringConstraints
+import re
+
+from pydantic import BaseModel, ConfigDict, Field, StringConstraints, model_validator
 
 
 def _camel(s: str) -> str:
@@ -65,6 +67,9 @@ class Integrity(_Wire):
     manifest_hash: _Str128 | None = None
 
 
+_DAILY_DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+
+
 class RunContext(_Wire):
     kind: Literal["delve", "daily"]
     daily_date: _Str16 | None = None
@@ -72,6 +77,18 @@ class RunContext(_Wire):
     foe_id: _Str64 | None = None
     seed: _Str128
     spec_ref: _Str128
+
+    @model_validator(mode="after")
+    def _kind_matches_daily_date(self) -> RunContext:
+        # kind and daily_date must agree, or the bests slice key collapses: a daily run with
+        # daily_date=None keys into the (None) delve slice and can overwrite a delve best
+        # (FABLE B4). daily <=> a well-formed date; delve => no date.
+        if self.kind == "daily":
+            if not (self.daily_date and _DAILY_DATE_RE.match(self.daily_date)):
+                raise ValueError("kind 'daily' requires dailyDate as YYYY-MM-DD")
+        elif self.daily_date is not None:
+            raise ValueError("kind 'delve' must not carry a dailyDate")
+        return self
 
 
 class RunOutcome(_Wire):
