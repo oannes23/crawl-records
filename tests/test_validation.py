@@ -93,3 +93,42 @@ def test_overlong_event_id_rejected(client):
         headers=_auth(tok),
     )
     assert r.status_code == 422, r.text
+
+
+# --- B2: outcome bounds -----------------------------------------------------
+
+
+def test_negative_terms_rejected(client):
+    tok = register(client)["token"]
+    r = client.post(
+        "/ingest",
+        json={"records": [run_record("e1", outcome={"result": "win", "terms": -999})]},
+        headers=_auth(tok),
+    )
+    assert r.status_code == 422, r.text
+    assert client.get("/me/bests", headers=_auth(tok)).json()["bests"] == []
+
+
+def test_absurd_outcome_rejected(client):
+    tok = register(client)["token"]
+    r = client.post(
+        "/ingest",
+        json={"records": [run_record("e1", outcome={"result": "win", "depthReached": 10_001})]},
+        headers=_auth(tok),
+    )
+    assert r.status_code == 422, r.text
+
+
+def test_outcome_boundary_values_pass(client):
+    tok = register(client)["token"]
+    r = client.post(
+        "/ingest",
+        json={
+            "records": [
+                run_record("e1", outcome={"result": "win", "terms": 0, "realTimeMs": 0, "depthReached": 0})
+            ]
+        },
+        headers=_auth(tok),
+    )
+    assert r.status_code == 200, r.text
+    assert r.json()["accepted"] == ["e1"]

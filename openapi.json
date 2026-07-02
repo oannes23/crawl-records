@@ -497,6 +497,8 @@
           "depthReached": {
             "anyOf": [
               {
+                "maximum": 10000.0,
+                "minimum": 0.0,
                 "type": "integer"
               },
               {
@@ -508,6 +510,8 @@
           "realTimeMs": {
             "anyOf": [
               {
+                "maximum": 604800000.0,
+                "minimum": 0.0,
                 "type": "integer"
               },
               {
@@ -528,6 +532,8 @@
           "terms": {
             "anyOf": [
               {
+                "maximum": 100000.0,
+                "minimum": 0.0,
                 "type": "integer"
               },
               {

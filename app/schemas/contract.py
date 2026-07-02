@@ -75,11 +75,16 @@ class RunContext(_Wire):
 
 
 class RunOutcome(_Wire):
+    # Outcome numbers feed the bests read model (the phase-2 leaderboard seed) and rows
+    # are append-only, so a garbage value accepted now is permanent leaderboard corruption
+    # (e.g. terms=-999 becomes the fewest-terms best). Bound them: non-negative, with
+    # generous sanity ceilings. A client emitting out-of-range values is broken, so a
+    # pydantic 422 that fails the whole batch is the correct, loud response.
     result: Literal["win", "loss", "flee"]
     # terms == "sets matched to clear" (minimize); see SERVICE-RESPONSE.md §3.
-    terms: int | None = None
-    real_time_ms: int | None = None
-    depth_reached: int | None = None
+    terms: int | None = Field(default=None, ge=0, le=100_000)
+    real_time_ms: int | None = Field(default=None, ge=0, le=7 * 24 * 3600 * 1000)
+    depth_reached: int | None = Field(default=None, ge=0, le=10_000)
 
 
 # --- /register ---------------------------------------------------------------

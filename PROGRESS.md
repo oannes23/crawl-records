@@ -142,8 +142,8 @@ changes keep `schemaVersion` at 1 — do not break it in phase R1/R2.
   the Postgres one-var-swap claim; biggest blast radius. `test_validation.py`. **[SEAM]** the
   client caps handle length only (`maxlength=18`, min 2) — it must adopt the charset rule
   `^[A-Za-z0-9][A-Za-z0-9 _\-]{0,31}$` or a valid client handle can 422. **Client mirror pending.**
-- ⬜ **B2** (P1) Outcome bounds — `Field(ge=0)` + sane upper caps on `terms`/`realTimeMs`/
-  `depthReached`; negatives currently become personal bests. Test: negative/absurd → 422; boundary passes.
+- ✅ **B2** (P1) Outcome bounds — `Field(ge=0)` + sane upper caps on `terms`/`realTimeMs`/
+  `depthReached`; negatives no longer become personal bests. `test_validation.py`.
 - ⬜ **B4** (P1) `kind`/`dailyDate` cross-validation — `model_validator`: `daily` ⇔ dated,
   `delve` ⇒ null; today a null-dated daily pollutes the delve bests slice. Test: both bad combos → 422.
 - ⬜ **B1** (P1) Fingerprint-scoped idempotency + `event-id-conflict` terminal reject — cross-player
