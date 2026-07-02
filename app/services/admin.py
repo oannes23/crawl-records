@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from sqlalchemy import func, select
+from sqlalchemy import false, func, select
 from sqlalchemy.orm import Session
 
 from app.models import Identity, Run
@@ -42,7 +42,8 @@ def list_runs(
             .scalars()
             .all()
         )
-        stmt = stmt.where(Run.fingerprint.in_(fps or ["\x00none"]))
+        # no fingerprint matched the handle → match nothing (portable, no magic sentinel)
+        stmt = stmt.where(Run.fingerprint.in_(fps) if fps else false())
     if fingerprint:
         stmt = stmt.where(Run.fingerprint == fingerprint)
     if class_id:

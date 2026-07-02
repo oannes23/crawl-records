@@ -2,11 +2,7 @@
 
 from __future__ import annotations
 
-from tests.conftest import register, run_record
-
-
-def _auth(token):
-    return {"Authorization": f"Bearer {token}"}
+from tests.conftest import _auth, register, run_record
 
 
 def _ingest(client, tok, *records):

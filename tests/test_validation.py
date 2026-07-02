@@ -7,11 +7,7 @@ bounds (B2), and the bests-slice coherence rule (B4).
 
 from __future__ import annotations
 
-from .conftest import register, run_record
-
-
-def _auth(token):
-    return {"Authorization": f"Bearer {token}"}
+from .conftest import _auth, register, run_record
 
 
 # --- B5: string bounds + handle charset -------------------------------------

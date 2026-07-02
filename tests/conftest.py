@@ -68,6 +68,11 @@ def settings_override():
 # --- helpers ----------------------------------------------------------------
 
 
+def _auth(token):
+    """Bearer auth header for a player token (shared across the ingest/bests tests)."""
+    return {"Authorization": f"Bearer {token}"}
+
+
 def register(client: TestClient, handle="Ashling", fingerprint="fp-1"):
     r = client.post(
         "/register",

@@ -6,11 +6,7 @@ from sqlalchemy import func, select
 
 from app.models import Run
 from app.services import ingest as ingest_svc
-from tests.conftest import register, run_record
-
-
-def _auth(token):
-    return {"Authorization": f"Bearer {token}"}
+from tests.conftest import _auth, register, run_record
 
 
 def test_duplicate_and_partial_batch_converge(client, engine):
@@ -39,7 +35,7 @@ def test_duplicate_and_partial_batch_converge(client, engine):
         json={"records": [run_record("e4"), run_record("e4")]},
         headers=_auth(tok),
     )
-    assert r.json()["accepted"].count("e4") >= 1
+    assert r.json()["accepted"].count("e4") == 1  # deduped (FABLE C6)
 
     # ground truth: one stored row per distinct eventId, never doubled
     with engine.connect() as conn:

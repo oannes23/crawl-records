@@ -7,13 +7,9 @@ OpenAPI schema (criterion 12 / client-codegen hygiene).
 from __future__ import annotations
 
 from app.main import app
-from tests.conftest import register, run_record
+from tests.conftest import _auth, register, run_record
 
 ADMIN = ("admin", "changeme")  # the test-default config creds
-
-
-def _auth(token):
-    return {"Authorization": f"Bearer {token}"}
 
 
 def test_admin_requires_auth(client):

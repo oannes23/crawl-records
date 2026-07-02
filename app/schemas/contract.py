@@ -157,6 +157,28 @@ class RunRecord(_Wire):
     instruments: dict[str, Any] = Field(default_factory=dict)
 
 
+class RunSummary(_Wire):
+    """A flat run row for the admin JSON layer. OUT OF the published contract — the admin
+    routes are ``include_in_schema=False`` and this is never referenced by a public route,
+    so it does not appear in ``openapi.json``. It lives here only to reuse the camelCase
+    alias machinery, so the wire field names have a single home instead of a hand-written
+    dict in the router (FABLE A2). ``created_at`` is pre-serialized to an ISO string."""
+
+    event_id: str
+    fingerprint: str
+    kind: str
+    class_id: str
+    foe_id: str | None = None
+    result: str
+    terms: int | None = None
+    real_time_ms: int | None = None
+    depth_reached: int | None = None
+    daily_date: str | None = None
+    ruleset_version: str
+    content_version: str
+    created_at: str | None = None
+
+
 class IngestRequest(_Wire):
     records: list[RunRecord]
 

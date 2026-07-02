@@ -38,8 +38,11 @@ The game core is a **pure deterministic generator from a seed/spec**. Therefore:
 3. **SQLite-first / Postgres-ready.** No dialect-specific SQL. Switching DB is one env var
    (`EMBASSY_DATABASE_URL`). Bests are computed in Python (compute-on-read) precisely to
    avoid `DISTINCT ON`/window-function portability traps.
-4. **Idempotency.** `/ingest` is an idempotent batch upsert keyed on `eventId`;
-   re-uploading never double-counts. The client prunes only acked IDs.
+4. **Idempotency (first-write-wins).** `/ingest` is an idempotent batch insert-or-skip keyed
+   on `eventId`, scoped to the caller: re-uploading never double-counts, and a re-sent
+   `eventId` keeps the **first** stored row (records are immutable events — this is NOT an
+   update; a corrected re-send is silently ignored). An `eventId` already owned by a
+   different identity is rejected `event-id-conflict`. The client prunes only acked IDs.
 5. **Versioning asserted on every record** (`schemaVersion`, `rulesetVersion`,
    `contentVersion`); never inferred. `/daily` folds versions into the seed so it can't
    assert board-equality across a mismatch.

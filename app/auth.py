@@ -49,19 +49,30 @@ def verify_recovery_code(code: str, stored_hash: str) -> bool:
 
 # --- player bearer dependency -----------------------------------------------
 
-_bearer = HTTPBearer(auto_error=True)
+# auto_error=False so a MISSING Authorization header returns 401 (with a WWW-Authenticate
+# challenge) rather than HTTPBearer's default 403 — a missing credential is "unauthenticated",
+# not "forbidden" (FABLE C5).
+_bearer = HTTPBearer(auto_error=False)
+
+_UNAUTHENTICATED = HTTPException(
+    status.HTTP_401_UNAUTHORIZED,
+    "missing or invalid bearer token",
+    headers={"WWW-Authenticate": "Bearer"},
+)
 
 
 def require_identity(
-    creds: HTTPAuthorizationCredentials = Depends(_bearer),
+    creds: HTTPAuthorizationCredentials | None = Depends(_bearer),
     db: Session = Depends(get_db),
 ) -> Identity:
     """Resolve the caller's identity from the bearer token, or 401."""
+    if creds is None:
+        raise _UNAUTHENTICATED
     identity = db.execute(
         select(Identity).where(Identity.token == creds.credentials)
     ).scalar_one_or_none()
     if identity is None:
-        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "invalid or unknown token")
+        raise _UNAUTHENTICATED
     return identity
 
 

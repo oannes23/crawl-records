@@ -5,11 +5,7 @@ from __future__ import annotations
 from sqlalchemy import select
 
 from app.models import Identity, Run
-from tests.conftest import register, run_record
-
-
-def _auth(token):
-    return {"Authorization": f"Bearer {token}"}
+from tests.conftest import _auth, register, run_record
 
 
 def test_handle_uniqueness_first_come(client):

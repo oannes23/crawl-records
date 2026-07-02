@@ -156,11 +156,11 @@ changes keep `schemaVersion` at 1 — do not break it in phase R1/R2.
 - ✅ **C1** (P2) Per-record `IntegrityError` handling — `begin_nested()` per insert so a raced
   first-time `eventId` is treated as duplicate-accepted, not a 500 that drops the whole batch.
   `test_idempotency.py` (race simulated by blinding the pre-check).
-- ⬜ **Cleanup bundle** (one PR): **D1** align "upsert"→first-write-wins wording (CLAUDE.md/
-  SERVICE-RESPONSE.md/docstring) · **D2** use-or-delete `_TERMINAL_REASONS` · **C6** dedupe the
-  `accepted` list (`dict.fromkeys`) + tighten test to `== 1` · **C5** 401-not-403 on missing bearer
-  (`auto_error=False` + `WWW-Authenticate`) · **A1** move `_auth` helper to `conftest.py` · **A2**
-  `RunSummary` schema for `api_runs` camelCase · **A3** `false()` sentinel · **A4** carry `_Criterion` in bests key.
+- ✅ **Cleanup bundle**: **D1** "upsert"→first-write-wins wording (CLAUDE.md/SERVICE-RESPONSE.md/
+  docstring) · **D2** `_TERMINAL_REASONS` now asserted in `reject()` · **C6** `accepted` deduped
+  (`dict.fromkeys`), test tightened to `== 1` · **C5** 401 + `WWW-Authenticate` on missing bearer
+  (`auto_error=False`) · **A1** `_auth` hoisted to `conftest.py` · **A2** `RunSummary(_Wire)` for
+  `api_runs` (out-of-contract, no openapi leak) · **A3** `false()` sentinel · **A4** bests carries `_Criterion`.
 
 ## Phase R2 — pre-public hardening (before any non-friends deployment)
 - ⬜ **S1** (P1) Recovery-code scheme — real entropy (EFF long list), handle-scoped `/recover`

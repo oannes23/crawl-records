@@ -18,6 +18,7 @@ from sqlalchemy.orm import Session
 from app.auth import require_admin
 from app.config import Settings, get_settings
 from app.db import get_db
+from app.schemas.contract import RunSummary
 from app.services import admin as admin_svc
 from app.services import bests as bests_svc
 from app.services import daily as daily_svc
@@ -158,21 +159,21 @@ def api_runs(
             "limit": limit,
             "offset": offset,
             "runs": [
-                {
-                    "eventId": r.event_id,
-                    "fingerprint": r.fingerprint,
-                    "kind": r.kind,
-                    "classId": r.class_id,
-                    "foeId": r.foe_id,
-                    "result": r.result,
-                    "terms": r.terms,
-                    "realTimeMs": r.real_time_ms,
-                    "depthReached": r.depth_reached,
-                    "dailyDate": r.daily_date,
-                    "rulesetVersion": r.ruleset_version,
-                    "contentVersion": r.content_version,
-                    "createdAt": r.created_at.isoformat() if r.created_at else None,
-                }
+                RunSummary(
+                    event_id=r.event_id,
+                    fingerprint=r.fingerprint,
+                    kind=r.kind,
+                    class_id=r.class_id,
+                    foe_id=r.foe_id,
+                    result=r.result,
+                    terms=r.terms,
+                    real_time_ms=r.real_time_ms,
+                    depth_reached=r.depth_reached,
+                    daily_date=r.daily_date,
+                    ruleset_version=r.ruleset_version,
+                    content_version=r.content_version,
+                    created_at=r.created_at.isoformat() if r.created_at else None,
+                ).model_dump(by_alias=True)
                 for r in rows
             ],
         }

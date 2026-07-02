@@ -55,8 +55,10 @@ def _is_better(candidate: Run, current: Run, crit: _Criterion) -> bool:
 def compute_bests(db: Session, fingerprint: str) -> BestsResponse:
     runs = db.execute(select(Run).where(Run.fingerprint == fingerprint)).scalars().all()
 
-    # key = (criterion, class_id, foe_id, daily_date) → best Run so far
-    best: dict[tuple, Run] = {}
+    # key = (criterion, class_id, foe_id, daily_date) → (its _Criterion, best Run so far).
+    # Carrying the _Criterion means the output loop reads its .field directly instead of
+    # re-scanning _CRITERIA per entry (FABLE A4).
+    best: dict[tuple, tuple[_Criterion, Run]] = {}
 
     for run in runs:
         if run.modded:
@@ -70,18 +72,18 @@ def compute_bests(db: Session, fingerprint: str) -> BestsResponse:
             daily_date = run.daily_date if run.kind == "daily" else None
             key = (crit.name, run.class_id, run.foe_id, daily_date)
             incumbent = best.get(key)
-            if incumbent is None or _is_better(run, incumbent, crit):
-                best[key] = run
+            if incumbent is None or _is_better(run, incumbent[1], crit):
+                best[key] = (crit, run)
 
     entries: list[BestEntry] = []
-    for (criterion, class_id, foe_id, daily_date), run in best.items():
+    for (criterion, class_id, foe_id, daily_date), (crit, run) in best.items():
         entries.append(
             BestEntry(
                 criterion=criterion,
                 class_id=class_id,
                 foe_id=foe_id,
                 daily_date=daily_date,
-                value=getattr(run, _field_for(criterion)),
+                value=getattr(run, crit.field),
                 event_id=run.event_id,
                 achieved_at=run.created_at.isoformat(),
             )
@@ -90,10 +92,3 @@ def compute_bests(db: Session, fingerprint: str) -> BestsResponse:
     # stable ordering for deterministic responses + readable admin output
     entries.sort(key=lambda e: (e.criterion, e.class_id, e.foe_id or "", e.daily_date or ""))
     return BestsResponse(bests=entries)
-
-
-def _field_for(criterion: str) -> str:
-    for c in _CRITERIA:
-        if c.name == criterion:
-            return c.field
-    raise KeyError(criterion)

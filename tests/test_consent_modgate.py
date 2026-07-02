@@ -2,17 +2,14 @@
 
 from __future__ import annotations
 
-from tests.conftest import register, run_record
-
-
-def _auth(token):
-    return {"Authorization": f"Bearer {token}"}
+from tests.conftest import _auth, register, run_record
 
 
 def test_ingest_requires_identity(client):
-    # no Authorization header → 401/403, never accepted
+    # no Authorization header → 401 (unauthenticated) with a Bearer challenge (FABLE C5)
     r = client.post("/ingest", json={"records": [run_record("e1")]})
-    assert r.status_code in (401, 403)
+    assert r.status_code == 401
+    assert r.headers["WWW-Authenticate"] == "Bearer"
 
     # a bogus token is rejected
     r = client.post("/ingest", json={"records": [run_record("e1")]}, headers=_auth("garbage"))

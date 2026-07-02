@@ -4,11 +4,7 @@ from __future__ import annotations
 
 import json
 
-from tests.conftest import register, run_record
-
-
-def _auth(token):
-    return {"Authorization": f"Bearer {token}"}
+from tests.conftest import _auth, register, run_record
 
 
 # --- item 1: structured authored-daily spec ---------------------------------

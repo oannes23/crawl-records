@@ -5,11 +5,7 @@ from __future__ import annotations
 from sqlalchemy import select
 
 from app.models import Run
-from tests.conftest import register, run_record
-
-
-def _auth(token):
-    return {"Authorization": f"Bearer {token}"}
+from tests.conftest import _auth, register, run_record
 
 
 def test_health_advertises_versions(client, settings_override):

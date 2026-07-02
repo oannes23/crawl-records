@@ -42,6 +42,7 @@ def ingest_records(
     rejected: list[RejectedRecord] = []
 
     def reject(event_id: str, reason: str) -> None:
+        assert reason in _TERMINAL_REASONS, f"unknown reject reason: {reason}"
         rejected.append(RejectedRecord(event_id=event_id, reason=reason, terminal=True))
 
     # which of these event_ids already exist, and under whose fingerprint? (idempotency +
@@ -98,6 +99,9 @@ def ingest_records(
         accepted.append(rec.event_id)
 
     db.commit()
+    # dedupe while preserving first-seen order: an eventId repeated within the batch was
+    # appended once per occurrence, but the client only needs it acked once (FABLE C6).
+    accepted = list(dict.fromkeys(accepted))
     return IngestResponse(accepted=accepted, rejected=rejected)
 
 
