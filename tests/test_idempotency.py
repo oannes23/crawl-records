@@ -112,3 +112,31 @@ def test_first_insert_race_is_absorbed_not_500(client, engine, monkeypatch):
             conn.execute(select(Run.event_id, func.count()).group_by(Run.event_id)).all()
         )
     assert per_id == {"e1": 1, "e2": 1}  # e1 not doubled; e2 committed despite the race
+
+
+def test_cross_owner_insert_race_still_rejects(client, engine, monkeypatch):
+    """FABLE B1×C1: the SAVEPOINT fallback must NOT blindly ack. If the row that wins the
+    insert race belongs to a *different* identity, the loser has to be rejected
+    event-id-conflict — otherwise C1's race-absorption silently reintroduces B1's data
+    loss. We force the race via the same pre-check blinding, but with two identities."""
+    alice = register(client, handle="Alice", fingerprint="fp-a")["token"]
+    bob = register(client, handle="Bob", fingerprint="fp-b")["token"]
+    client.post("/ingest", json={"records": [run_record("e1", fingerprint="fp-a")]}, headers=_auth(alice))
+
+    # blind the pre-check so Bob's request reaches the insert and races Alice's live row
+    monkeypatch.setattr(ingest_svc, "_existing_owners", lambda db, ids: {})
+
+    r = client.post(
+        "/ingest",
+        json={"records": [run_record("e1", fingerprint="fp-b")]},
+        headers=_auth(bob),
+    )
+    body = r.json()
+    assert body["accepted"] == []
+    assert body["rejected"][0]["reason"] == "event-id-conflict"
+
+    with engine.connect() as conn:
+        owner = conn.execute(select(Run.fingerprint).where(Run.event_id == "e1")).scalar_one()
+        total = conn.execute(select(func.count()).select_from(Run)).scalar_one()
+    assert owner == "fp-a"  # Alice's row untouched
+    assert total == 1

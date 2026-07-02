@@ -92,7 +92,19 @@ def ingest_records(
                 db.add(_to_row(rec))
                 db.flush()
         except IntegrityError:
-            accepted.append(rec.event_id)
+            # Lost an insert race: the row was committed by another writer between our
+            # pre-check and this flush. Re-resolve the true owner before acking — a
+            # same-owner race is an idempotent duplicate (accept), but a *different* owner
+            # is a genuine conflict that must NOT be reported accepted, or we reintroduce
+            # B1's silent data loss. Query the DB directly (not _existing_owners, which the
+            # race test stubs) so we see committed reality.
+            owner = db.execute(
+                select(Run.fingerprint).where(Run.event_id == rec.event_id)
+            ).scalar_one_or_none()
+            if owner == caller.fingerprint:
+                accepted.append(rec.event_id)
+            else:
+                reject(rec.event_id, "event-id-conflict")
             seen_in_batch.add(rec.event_id)
             continue
         seen_in_batch.add(rec.event_id)
