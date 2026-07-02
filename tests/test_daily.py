@@ -29,6 +29,15 @@ def test_malformed_date_rejected(client):
     assert r.status_code == 400
 
 
+def test_date_is_normalized(client):
+    """FABLE B3: a non-zero-padded date normalizes to the padded form and yields the
+    identical descriptor, so two clients asking for the same calendar day agree."""
+    unpadded = client.get("/daily?date=2026-7-1").json()
+    padded = client.get("/daily?date=2026-07-01").json()
+    assert unpadded["date"] == "2026-07-01"
+    assert unpadded == padded
+
+
 def test_criteria_are_the_mvp_set(client):
     crit = client.get("/daily?date=2026-06-22").json()["criteria"]
     assert crit == ["fewest-terms", "fastest-clear", "deepest-delve"]

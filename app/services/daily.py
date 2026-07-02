@@ -67,9 +67,14 @@ def daily_descriptor(date: str, settings: Settings) -> DailyDescriptor:
 
 
 def validate_date(date: str) -> str:
-    """Accept an explicit ``YYYY-MM-DD`` or default to today (UTC). Raises ValueError."""
+    """Accept an explicit ``YYYY-MM-DD`` or default to today (UTC). Raises ValueError.
+
+    Returns the **normalized** (zero-padded) form: ``strptime`` accepts non-padded input
+    like ``2026-7-1``, and the raw string is hashed into the seed and used as the bests
+    daily-slice key — so without normalization ``2026-7-1`` and ``2026-07-01`` would yield
+    different boards and split the same calendar day into two slices (FABLE B3).
+    """
     if not date:
         return today_utc()
-    # strict parse; rejects malformed input
-    datetime.strptime(date, "%Y-%m-%d")
-    return date
+    # strict parse (rejects malformed input) + re-emit zero-padded canonical form
+    return datetime.strptime(date, "%Y-%m-%d").strftime("%Y-%m-%d")

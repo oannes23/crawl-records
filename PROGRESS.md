@@ -151,8 +151,8 @@ changes keep `schemaVersion` at 1 — do not break it in phase R1/R2.
   `test_idempotency.py`. New terminal reason documented in `RejectedRecord`.
 - ✅ **B6** (P2) Assert `schemaVersion` — records with an unsupported version are rejected
   `unsupported-schema-version` (terminal). Documented in SERVICE-RESPONSE.md. `test_versioning.py`.
-- ⬜ **B3** (P2) `/daily` date normalization — `strptime`→`strftime` round-trip so `2026-7-1` ==
-  `2026-07-01` (same seed + same bests slice). Test: `?date=2026-7-1` returns padded date + matching seed.
+- ✅ **B3** (P2) `/daily` date normalization — `strptime`→`strftime` round-trip so `2026-7-1` ==
+  `2026-07-01` (same seed + same bests slice). `test_daily.py`.
 - ⬜ **C1** (P2) Per-record `IntegrityError` handling — `begin_nested()` per insert so a raced
   first-time `eventId` is treated as duplicate-accepted, not a 500 that drops the whole batch.
 - ⬜ **Cleanup bundle** (one PR): **D1** align "upsert"→first-write-wins wording (CLAUDE.md/
