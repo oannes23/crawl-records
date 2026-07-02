@@ -10,9 +10,9 @@ Conventions:
 
 from __future__ import annotations
 
-from typing import Any, Literal
+from typing import Annotated, Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, StringConstraints
 
 
 def _camel(s: str) -> str:
@@ -24,28 +24,54 @@ class _Wire(BaseModel):
     model_config = ConfigDict(alias_generator=_camel, populate_by_name=True)
 
 
+# --- bounded string types ----------------------------------------------------
+# Every wire string is length-capped to match its DB column. SQLite ignores
+# String(n) lengths, but Postgres raises DataError on overflow — so without these
+# caps the "switch DB = one env var" invariant (CLAUDE.md #3) breaks on real input,
+# and unbounded strings are an abuse vector. Caps mirror app/models/*: fingerprint/
+# event_id/version/id 64, seed/spec_ref/manifest/recovery 128, consent 32, date 16.
+_Str16 = Annotated[str, StringConstraints(max_length=16)]
+_Str32 = Annotated[str, StringConstraints(max_length=32)]
+_Str64 = Annotated[str, StringConstraints(max_length=64)]
+_Str128 = Annotated[str, StringConstraints(max_length=128)]
+
+# The player-chosen handle: trimmed, 1-32 chars, alphanumeric plus space/_/- and a
+# leading alphanumeric. Keeps public leaderboard names free of control chars and
+# homoglyph impersonation. [SEAM: set-core] the client registration UI must enforce
+# the same rule (today it caps length only) so a valid handle never 422s.
+Handle = Annotated[
+    str,
+    StringConstraints(
+        strip_whitespace=True,
+        min_length=1,
+        max_length=32,
+        pattern=r"^[A-Za-z0-9][A-Za-z0-9 _\-]{0,31}$",
+    ),
+]
+
+
 # --- shared sub-objects ------------------------------------------------------
 
 
 class ClientVersions(_Wire):
-    ruleset_version: str
-    content_version: str
+    ruleset_version: _Str64
+    content_version: _Str64
 
 
 class Integrity(_Wire):
     """Mod gate. ``manifest_hash`` is the reserved slot for the future content-hash gate."""
 
     modded: bool = False
-    manifest_hash: str | None = None
+    manifest_hash: _Str128 | None = None
 
 
 class RunContext(_Wire):
     kind: Literal["delve", "daily"]
-    daily_date: str | None = None
-    class_id: str
-    foe_id: str | None = None
-    seed: str
-    spec_ref: str
+    daily_date: _Str16 | None = None
+    class_id: _Str64
+    foe_id: _Str64 | None = None
+    seed: _Str128
+    spec_ref: _Str128
 
 
 class RunOutcome(_Wire):
@@ -60,9 +86,9 @@ class RunOutcome(_Wire):
 
 
 class RegisterRequest(_Wire):
-    fingerprint: str
-    handle: str
-    consent_version: str
+    fingerprint: _Str64
+    handle: Handle
+    consent_version: _Str32
     client: ClientVersions
 
 
@@ -76,8 +102,8 @@ class RegisterResponse(_Wire):
 
 
 class RecoverRequest(_Wire):
-    recovery_code: str
-    fingerprint: str  # the NEW fingerprint to bind
+    recovery_code: _Str128
+    fingerprint: _Str64  # the NEW fingerprint to bind
 
 
 class RecoverResponse(_Wire):
@@ -97,11 +123,11 @@ class HandleAvailableResponse(_Wire):
 
 
 class RunRecord(_Wire):
-    event_id: str
-    fingerprint: str
+    event_id: _Str64
+    fingerprint: _Str64
     schema_version: int
-    ruleset_version: str
-    content_version: str
+    ruleset_version: _Str64
+    content_version: _Str64
     integrity: Integrity = Field(default_factory=Integrity)
     context: RunContext
     outcome: RunOutcome

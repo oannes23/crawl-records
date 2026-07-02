@@ -75,10 +75,12 @@
       "ClientVersions": {
         "properties": {
           "contentVersion": {
+            "maxLength": 64,
             "title": "Contentversion",
             "type": "string"
           },
           "rulesetVersion": {
+            "maxLength": 64,
             "title": "Rulesetversion",
             "type": "string"
           }
@@ -296,6 +298,7 @@
           "manifestHash": {
             "anyOf": [
               {
+                "maxLength": 128,
                 "type": "string"
               },
               {
@@ -316,10 +319,12 @@
       "RecoverRequest": {
         "properties": {
           "fingerprint": {
+            "maxLength": 64,
             "title": "Fingerprint",
             "type": "string"
           },
           "recoveryCode": {
+            "maxLength": 128,
             "title": "Recoverycode",
             "type": "string"
           }
@@ -355,14 +360,19 @@
             "$ref": "#/components/schemas/ClientVersions"
           },
           "consentVersion": {
+            "maxLength": 32,
             "title": "Consentversion",
             "type": "string"
           },
           "fingerprint": {
+            "maxLength": 64,
             "title": "Fingerprint",
             "type": "string"
           },
           "handle": {
+            "maxLength": 32,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9 _\\-]{0,31}$",
             "title": "Handle",
             "type": "string"
           }
@@ -426,12 +436,14 @@
       "RunContext": {
         "properties": {
           "classId": {
+            "maxLength": 64,
             "title": "Classid",
             "type": "string"
           },
           "dailyDate": {
             "anyOf": [
               {
+                "maxLength": 16,
                 "type": "string"
               },
               {
@@ -443,6 +455,7 @@
           "foeId": {
             "anyOf": [
               {
+                "maxLength": 64,
                 "type": "string"
               },
               {
@@ -460,10 +473,12 @@
             "type": "string"
           },
           "seed": {
+            "maxLength": 128,
             "title": "Seed",
             "type": "string"
           },
           "specRef": {
+            "maxLength": 128,
             "title": "Specref",
             "type": "string"
           }
@@ -536,6 +551,7 @@
             "type": "array"
           },
           "contentVersion": {
+            "maxLength": 64,
             "title": "Contentversion",
             "type": "string"
           },
@@ -543,10 +559,12 @@
             "$ref": "#/components/schemas/RunContext"
           },
           "eventId": {
+            "maxLength": 64,
             "title": "Eventid",
             "type": "string"
           },
           "fingerprint": {
+            "maxLength": 64,
             "title": "Fingerprint",
             "type": "string"
           },
@@ -562,6 +580,7 @@
             "$ref": "#/components/schemas/RunOutcome"
           },
           "rulesetVersion": {
+            "maxLength": 64,
             "title": "Rulesetversion",
             "type": "string"
           },

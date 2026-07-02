@@ -121,3 +121,89 @@ the acceptance criteria in `SERVICE.md` §8. Companion: `CLAUDE.md` (orientation
 Cross-player leaderboards · content/asset download · server-side replay verification ·
 signed-content anti-cheat · social/accounts. Data is captured replay-ready; the bests query
 is the leaderboard read-model seed.
+
+---
+
+# FABLE roadmap (post-MVP hardening & depth)
+
+Derived from `FABLE.md` (Fable 5 review, 2026-07-01 @ `9d95dd8`). Each item is one
+agent-sized task; the ID (B/S/C/D/A/G/O) points at the FABLE.md section with the full
+analysis, repro, and fix sketch. **Do phases in order; do items within a phase in order.**
+
+**Standing rules for every item:** run `make test && make lint && make openapi && git diff
+--exit-code openapi.json` before calling it done · new gates land with a proving test in the
+matching `tests/test_*.py` (acceptance criteria map 1:1 to tests) · update this file as items
+land · items tagged **[SEAM]** need the mirrored change (or explicit ack) in
+`set-core/src/net/contract.ts` + the handshake docs before merge. Validation-only and additive
+changes keep `schemaVersion` at 1 — do not break it in phase R1/R2.
+
+## Phase R1 — correctness of what exists (validation-only; no wire break)
+- ✅ **B5** (P1) String bounds on every wire field + handle charset/min-length/trim — unblocks
+  the Postgres one-var-swap claim; biggest blast radius. `test_validation.py`. **[SEAM]** the
+  client caps handle length only (`maxlength=18`, min 2) — it must adopt the charset rule
+  `^[A-Za-z0-9][A-Za-z0-9 _\-]{0,31}$` or a valid client handle can 422. **Client mirror pending.**
+- ⬜ **B2** (P1) Outcome bounds — `Field(ge=0)` + sane upper caps on `terms`/`realTimeMs`/
+  `depthReached`; negatives currently become personal bests. Test: negative/absurd → 422; boundary passes.
+- ⬜ **B4** (P1) `kind`/`dailyDate` cross-validation — `model_validator`: `daily` ⇔ dated,
+  `delve` ⇒ null; today a null-dated daily pollutes the delve bests slice. Test: both bad combos → 422.
+- ⬜ **B1** (P1) Fingerprint-scoped idempotency + `event-id-conflict` terminal reject — cross-player
+  `eventId` collision currently reports `accepted` and silently destroys the victim's run.
+  Test: two identities, same `eventId`; 2nd gets `event-id-conflict`, row count unchanged.
+- ⬜ **B6** (P2) Assert `schemaVersion` — reject unsupported versions terminal; today `999` is accepted.
+  Document the new reason in SERVICE-RESPONSE.md. Test: `schemaVersion:2` → terminal reject; `1` passes.
+- ⬜ **B3** (P2) `/daily` date normalization — `strptime`→`strftime` round-trip so `2026-7-1` ==
+  `2026-07-01` (same seed + same bests slice). Test: `?date=2026-7-1` returns padded date + matching seed.
+- ⬜ **C1** (P2) Per-record `IntegrityError` handling — `begin_nested()` per insert so a raced
+  first-time `eventId` is treated as duplicate-accepted, not a 500 that drops the whole batch.
+- ⬜ **Cleanup bundle** (one PR): **D1** align "upsert"→first-write-wins wording (CLAUDE.md/
+  SERVICE-RESPONSE.md/docstring) · **D2** use-or-delete `_TERMINAL_REASONS` · **C6** dedupe the
+  `accepted` list (`dict.fromkeys`) + tighten test to `== 1` · **C5** 401-not-403 on missing bearer
+  (`auto_error=False` + `WWW-Authenticate`) · **A1** move `_auth` helper to `conftest.py` · **A2**
+  `RunSummary` schema for `api_runs` camelCase · **A3** `false()` sentinel · **A4** carry `_Criterion` in bests key.
+
+## Phase R2 — pre-public hardening (before any non-friends deployment)
+- ⬜ **S1** (P1) Recovery-code scheme — real entropy (EFF long list), handle-scoped `/recover`
+  (kills the O(n) scan + cross-account collision), per-identity salted hash. **[SEAM]** add
+  `handle` to `RecoverRequest` (optional now → required later) ↔ recover UX. Test: handle+code
+  succeeds; wrong handle + valid code fails; two identities forced onto one code each recover only self.
+- ⬜ **S2** (P1) Rate limiting — `/register` & `/recover` 5/hr/IP, `/ingest` 60/min/token → 429
+  (+`Retry-After`); in-app token bucket preferred over a dep. Test: N+1th in window → 429; expiry restores.
+- ⬜ **S3** (P2) Body-size caps — ASGI middleware rejects `Content-Length` > ~10 MB (413) + pydantic
+  `actions max_length` + per-record serialized-size cap. **[SEAM]** confirm worst-case delve action count.
+- ⬜ **S4** (P2) Hash bearer tokens at rest — store `sha256(token)`, look up by hash; no wire change.
+  Test: register → token authenticates; DB row has no raw token.
+- ⬜ **O1** SQLite WAL + `busy_timeout` PRAGMA on connect + README "SQLite = single process" note.
+- ⬜ **O4** Postgres CI job — service container + `alembic upgrade head` + pytest against
+  `EMBASSY_DATABASE_URL`; mechanical guard for the B5/C2/C3 portability class.
+- ⬜ **S5** (P3) `changeme` guard — loud warning or refuse `/admin` when default password + non-local bind; HTTPS note.
+- ⬜ **G7** (P2) `DELETE /me` — bearer-authed erasure of identity + all runs (or handle tombstone);
+  admin per-identity delete. **[SEAM]** "Leave the Embassy" UX. Fold in **D5** README data-deletion wording.
+
+## Phase R3 — product depth (coordinate with the set-core session)
+- ⬜ **G1** (P2) Daily streaks — additive read-model (`daily:{streak,bestStreak,playedToday}` on
+  `/me/bests` or new `GET /me/daily`); strongest cheap retention add. **[SEAM]** Daily Dispatch UI.
+- ⬜ **G2** (P2) Bests filtering params — additive `?kind=` / `?since=`; `/me/bests` grows unbounded
+  (a year of dailies ≈ 1000+ entries). **[SEAM]** decide client display needs first.
+- ⬜ **G5** (P2) Real version tokens — build/content hash from the client release pipeline injected
+  into the Embassy deploy env (one artifact, two consumers); server side is already env-ready. **[SEAM]** client-driven.
+- ⬜ **G3** (design) `deepest-delve` slicing — depth is a run property; today sharded per (class×foe).
+  Likely per-**class** only. Read-model change, no wire break — **game-design ratification (set-core) first**. **[SEAM]**
+- ⬜ **C2** (P3) Timezone-aware datetimes — `DateTime(timezone=True)` + UTC-suffixed ISO responses;
+  fold into any migration R2/R3 already requires. **[SEAM]** confirm client date parsing (should be a no-op).
+- ⬜ **S6 + G6** Daily secret + persisted roll — fold `EMBASSY_DAILY_SECRET` into the seed hash,
+  clamp served dates to `today ± 1`, persist first roll to a `daily_roll` table. **Prerequisite for leaderboards.**
+  **[SEAM]** verify the client never recomputes the seed (only derives selections from it).
+- ⬜ **Doc/DX bundle**: **D3** reshape-typo decision (lockstep rename vs. canonize; **[SEAM]**) · **D4**
+  handle-change deferral note (or `POST /me/handle`) · **C7** consentVersion check at register (**[SEAM]**
+  client reads `/health` first) · **C3** admin date-filter fix/removal · **C4** malformed `EMBASSY_DAILY_FILE`
+  fallback · **C8** document the manual `run.fingerprint`↔`identity` invariant · **C9** escape `%` in Alembic URL ·
+  **G4** `featuredCriterion` daily convention (**[SEAM]**) · **G8** `GET /me` · **O2** structured logging/metrics ·
+  **O3** deploy doc (HTTPS, body cap, CORS origin, backup).
+
+## Cross-repo coordination ledger (workspace-level; see FABLE.md §10)
+Two items cannot be resolved in this repo alone — surface to the set-core session:
+- **D3** `reshareSharePlayer` fossilized typo lives in BOTH repos (client `capture.ts:132` +
+  server `admin.py:110`/`seed_demo.py`). They agree today; a unilateral rename silently zeroes the
+  aggregate. **Decision needed:** lockstep rename (dual-emit transition) or canonize the typo.
+- **G3** `deepest-delve` per-(class×foe) slicing is a game-design call about what a "best" means —
+  owned by set-core; server change is a small read-model rekey once ratified.
