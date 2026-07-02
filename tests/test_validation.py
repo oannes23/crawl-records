@@ -154,6 +154,28 @@ def test_delve_with_date_rejected(client):
     assert r.status_code == 422, r.text
 
 
+def test_daily_with_impossible_date_rejected(client):
+    # regex-shaped but not a real calendar date (QA finding #4)
+    tok = register(client)["token"]
+    r = client.post(
+        "/ingest",
+        json={"records": [run_record("e1", context={"kind": "daily", "dailyDate": "9999-99-99"})]},
+        headers=_auth(tok),
+    )
+    assert r.status_code == 422, r.text
+
+
+def test_daily_with_unpadded_date_rejected(client):
+    # /daily normalizes to zero-padded; the bests slice key must stay canonical
+    tok = register(client)["token"]
+    r = client.post(
+        "/ingest",
+        json={"records": [run_record("e1", context={"kind": "daily", "dailyDate": "2026-7-1"})]},
+        headers=_auth(tok),
+    )
+    assert r.status_code == 422, r.text
+
+
 def test_valid_daily_and_delve_pass(client):
     tok = register(client)["token"]
     r = client.post(

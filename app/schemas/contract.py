@@ -13,6 +13,7 @@ from __future__ import annotations
 from typing import Annotated, Any, Literal
 
 import re
+from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, model_validator
 
@@ -70,6 +71,20 @@ class Integrity(_Wire):
 _DAILY_DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 
 
+def _is_canonical_date(s: str) -> bool:
+    """True iff ``s`` is a zero-padded YYYY-MM-DD that names a real calendar date. The
+    regex fixes the shape (so it matches the normalized /daily date and the bests slice
+    key); strptime rejects impossible dates like ``9999-99-99`` that the regex alone lets
+    through (QA finding #4 — keep this consistent with daily.validate_date)."""
+    if not _DAILY_DATE_RE.match(s):
+        return False
+    try:
+        datetime.strptime(s, "%Y-%m-%d")
+    except ValueError:
+        return False
+    return True
+
+
 class RunContext(_Wire):
     kind: Literal["delve", "daily"]
     daily_date: _Str16 | None = None
@@ -84,8 +99,8 @@ class RunContext(_Wire):
         # daily_date=None keys into the (None) delve slice and can overwrite a delve best
         # (FABLE B4). daily <=> a well-formed date; delve => no date.
         if self.kind == "daily":
-            if not (self.daily_date and _DAILY_DATE_RE.match(self.daily_date)):
-                raise ValueError("kind 'daily' requires dailyDate as YYYY-MM-DD")
+            if not (self.daily_date and _is_canonical_date(self.daily_date)):
+                raise ValueError("kind 'daily' requires dailyDate as a real YYYY-MM-DD date")
         elif self.daily_date is not None:
             raise ValueError("kind 'delve' must not carry a dailyDate")
         return self
