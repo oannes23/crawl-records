@@ -162,6 +162,22 @@ changes keep `schemaVersion` at 1 — do not break it in phase R1/R2.
   (`auto_error=False`) · **A1** `_auth` hoisted to `conftest.py` · **A2** `RunSummary(_Wire)` for
   `api_runs` (out-of-contract, no openapi leak) · **A3** `false()` sentinel · **A4** bests carries `_Criterion`.
 
+### Phase R1 review follow-ups (from the QA + game-design pass, 2026-07-01)
+All fixed in-phase except these, deliberately deferred:
+- **[SEAM] `realTimeMs` timer semantics** — the 7-day cap only risks a false-reject if the
+  client measures *wall-clock* (AFK-inflatable) time rather than active play. Confirm with
+  set-core; if wall-clock, either clamp client-side or move this one bound to a per-record
+  `terminal` reject (so a marathon run can't 422 a whole batch). Game-designer flagged; the
+  other two caps (`terms` 100k, `depth` 10k) have ~20–500× headroom over any reachable run.
+- **Batch-vs-per-record failure** — a schema violation 422s the whole batch (now tested +
+  documented in SERVICE-RESPONSE.md). Accepted per FABLE B2; revisit only if a real client
+  legitimately mixes one malformed record with good ones.
+- **`actions`/`instruments` unbounded** — same abuse-vector class as B5 but JSON columns, not
+  strings. Covered by **S3** in Phase R2 (body-size cap + `actions` length cap); not a gap.
+- **[SEAM] Handle charset is ASCII-only** — rejects international handles a well-behaved
+  client could previously send. Already tracked under B5's client-mirror obligation; confirm
+  the intended i18n policy with set-core when mirroring the charset rule.
+
 ## Phase R2 — pre-public hardening (before any non-friends deployment)
 - ⬜ **S1** (P1) Recovery-code scheme — real entropy (EFF long list), handle-scoped `/recover`
   (kills the O(n) scan + cross-account collision), per-identity salted hash. **[SEAM]** add
