@@ -146,9 +146,9 @@ changes keep `schemaVersion` at 1 — do not break it in phase R1/R2.
   `depthReached`; negatives no longer become personal bests. `test_validation.py`.
 - ✅ **B4** (P1) `kind`/`dailyDate` cross-validation — `model_validator`: `daily` ⇔ dated,
   `delve` ⇒ null; a null-dated daily no longer pollutes the delve bests slice. `test_validation.py`.
-- ⬜ **B1** (P1) Fingerprint-scoped idempotency + `event-id-conflict` terminal reject — cross-player
-  `eventId` collision currently reports `accepted` and silently destroys the victim's run.
-  Test: two identities, same `eventId`; 2nd gets `event-id-conflict`, row count unchanged.
+- ✅ **B1** (P1) Fingerprint-scoped idempotency + `event-id-conflict` terminal reject — a
+  cross-player `eventId` collision now rejects instead of silently reporting `accepted`.
+  `test_idempotency.py`. New terminal reason documented in `RejectedRecord`.
 - ⬜ **B6** (P2) Assert `schemaVersion` — reject unsupported versions terminal; today `999` is accepted.
   Document the new reason in SERVICE-RESPONSE.md. Test: `schemaVersion:2` → terminal reject; `1` passes.
 - ⬜ **B3** (P2) `/daily` date normalization — `strptime`→`strftime` round-trip so `2026-7-1` ==
