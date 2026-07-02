@@ -36,6 +36,29 @@ def test_every_run_persists_versions(client, engine):
     assert row.content_version == "1.0.0"
 
 
+def test_unsupported_schema_version_rejected(client):
+    """FABLE B6: a record whose schemaVersion the server doesn't support is rejected
+    terminal, not silently stored in a shape the server doesn't understand."""
+    tok = register(client)["token"]
+    r = client.post(
+        "/ingest",
+        json={"records": [run_record("e1", schemaVersion=999)]},
+        headers=_auth(tok),
+    )
+    body = r.json()
+    assert body["accepted"] == []
+    assert body["rejected"][0]["reason"] == "unsupported-schema-version"
+    assert body["rejected"][0]["terminal"] is True
+
+    # the supported version still passes
+    r = client.post(
+        "/ingest",
+        json={"records": [run_record("e2", schemaVersion=1)]},
+        headers=_auth(tok),
+    )
+    assert r.json()["accepted"] == ["e2"]
+
+
 def test_daily_is_version_pinned(client, settings_override):
     """The daily descriptor carries + depends on the active versions: changing them changes
     the seed, so a client on a mismatched version cannot claim board-equality."""

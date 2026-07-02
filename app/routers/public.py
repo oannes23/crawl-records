@@ -71,7 +71,9 @@ def ingest(
             status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
             f"batch exceeds max_batch={settings.max_batch}",
         )
-    return ingest_svc.ingest_records(db, caller, req.records)
+    return ingest_svc.ingest_records(
+        db, caller, req.records, frozenset({settings.schema_version})
+    )
 
 
 @router.get("/me/bests", response_model=BestsResponse)

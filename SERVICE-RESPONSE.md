@@ -78,9 +78,12 @@ register/recover, bound to the fingerprint). `/health`, `/handle/available`, `/r
 | GET | `/me/bests` | bearer | → `{bests:[{criterion, classId, foeId, dailyDate, value, eventId, achievedAt}…]}` | 401 |
 | GET | `/daily?date=` | none | → `{date, seed, specRef, rulesetVersion, contentVersion, criteria}` | 400 (malformed date) |
 
-- **`rejected` reasons** from `/ingest`: `modded`, `fingerprint-mismatch`, `missing-version`.
-  An already-stored or in-batch-duplicate `eventId` is reported in **`accepted`** (idempotent),
-  never double-stored.
+- **`rejected` reasons** from `/ingest` (all carry `terminal: true`): `modded`,
+  `fingerprint-mismatch`, `missing-version`, `unsupported-schema-version` (the record's
+  `schemaVersion` is not one this server supports), `event-id-conflict` (the `eventId`
+  already belongs to a **different** identity — never reported accepted, so the client must
+  not prune it). An already-stored or in-batch-duplicate `eventId` **owned by the caller** is
+  reported in **`accepted`** (idempotent, first-write-wins), never double-stored or updated.
 - **Bests criteria:** `fewest-terms` (min terms, wins only), `fastest-clear` (min realTimeMs,
   wins only), `deepest-delve` (max depthReached, counts losses too). Sliced per
   `(classId × foeId)`; daily runs slice additionally by `dailyDate`.

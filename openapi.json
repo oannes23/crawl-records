@@ -410,7 +410,7 @@
         "type": "object"
       },
       "RejectedRecord": {
-        "description": "A per-record ingest rejection. ``terminal`` tells the client whether to quarantine/\ndrop the record (true) or keep it in the outbox and retry (false). Every reason the MVP\nemits \u2014 ``modded``, ``missing-version``, ``fingerprint-mismatch``, ``event-id-conflict``\n\u2014 is terminal. Any future retryable reject will carry ``terminal: false`` so the client\nbranches on the boolean, never on parsing the reason string.",
+        "description": "A per-record ingest rejection. ``terminal`` tells the client whether to quarantine/\ndrop the record (true) or keep it in the outbox and retry (false). Every reason the MVP\nemits \u2014 ``modded``, ``missing-version``, ``unsupported-schema-version``,\n``fingerprint-mismatch``, ``event-id-conflict`` \u2014 is terminal. Any future retryable\nreject will carry ``terminal: false`` so the client branches on the boolean, never on\nparsing the reason string.",
         "properties": {
           "eventId": {
             "title": "Eventid",

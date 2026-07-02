@@ -26,12 +26,16 @@ _TERMINAL_REASONS = (
     "modded",
     "fingerprint-mismatch",
     "missing-version",
+    "unsupported-schema-version",
     "event-id-conflict",
 )
 
 
 def ingest_records(
-    db: Session, caller: Identity, records: list[RunRecord]
+    db: Session,
+    caller: Identity,
+    records: list[RunRecord],
+    supported_schema_versions: frozenset[int],
 ) -> IngestResponse:
     accepted: list[str] = []
     rejected: list[RejectedRecord] = []
@@ -60,6 +64,12 @@ def ingest_records(
             continue
         if not rec.ruleset_version or not rec.content_version:
             reject(rec.event_id, "missing-version")
+            continue
+        if rec.schema_version not in supported_schema_versions:
+            # storing a payload in a shape we don't claim to understand violates
+            # CLAUDE.md invariant 5; terminal because retrying can't fix it (a newer
+            # client re-emits under the new schema after its own migration).
+            reject(rec.event_id, "unsupported-schema-version")
             continue
 
         # --- idempotency (caller-scoped) -------------------------------------

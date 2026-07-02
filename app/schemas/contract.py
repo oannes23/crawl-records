@@ -164,9 +164,10 @@ class IngestRequest(_Wire):
 class RejectedRecord(_Wire):
     """A per-record ingest rejection. ``terminal`` tells the client whether to quarantine/
     drop the record (true) or keep it in the outbox and retry (false). Every reason the MVP
-    emits — ``modded``, ``missing-version``, ``fingerprint-mismatch``, ``event-id-conflict``
-    — is terminal. Any future retryable reject will carry ``terminal: false`` so the client
-    branches on the boolean, never on parsing the reason string."""
+    emits — ``modded``, ``missing-version``, ``unsupported-schema-version``,
+    ``fingerprint-mismatch``, ``event-id-conflict`` — is terminal. Any future retryable
+    reject will carry ``terminal: false`` so the client branches on the boolean, never on
+    parsing the reason string."""
 
     event_id: str
     reason: str
