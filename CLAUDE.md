@@ -84,6 +84,12 @@ The game core is a **pure deterministic generator from a seed/spec**. Therefore:
 
 - Open-source + self-hostable: a fresh clone runs on SQLite with `uv pip install -e ".[dev]"`
   → `make migrate` → `make dev`, no external services.
+- **Container + release:** `Dockerfile` builds a non-root image that runs `alembic upgrade
+  head` then uvicorn (`docker-entrypoint.sh`); ships no DB/secrets (config via `EMBASSY_*`,
+  SQLite on a volume). `GET /healthz` is a contract-free liveness probe (not in `openapi.json`;
+  don't confuse it with the versioned `/health` handshake). Tagging `vX.Y.Z` triggers
+  `.github/workflows/release.yml` → `ghcr.io/<owner>/crawl-records`. Deploy lives in the
+  sibling `local-infra` repo (GitOps-pinned compose on host `bob`).
 - **The deliverable handshake:** when the service meets §8, write/maintain
   `SERVICE-RESPONSE.md` at the repo root (per SERVICE.md §10) — the contract doc the game
   client builds its Embassy integration against. Keep it in sync with the real API.

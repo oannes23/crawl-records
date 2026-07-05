@@ -73,6 +73,42 @@ A fresh clone runs with the Quick-start commands above on SQLite with no externa
 Point a game client at your instance via its server-URL config. This is open source; the
 official instance is just the default.
 
+## Running in a container
+
+The repo ships a `Dockerfile`. The image runs `alembic upgrade head` (idempotent) on start,
+then serves uvicorn on `0.0.0.0:8000`. It carries **no database and no secrets** — persist
+the SQLite file on a volume and pass config as `EMBASSY_*` env vars.
+
+```bash
+docker build -t crawl-records:dev .
+docker run --rm -p 8000:8000 \
+  -v "$PWD/data:/data" \
+  -e EMBASSY_DATABASE_URL=sqlite:////data/embassy.db \
+  -e EMBASSY_ADMIN_PASSWORD=change-me \
+  crawl-records:dev
+# liveness probe (contract-free): curl -fsS localhost:8000/healthz  ->  {"status":"ok"}
+```
+
+`GET /healthz` is a liveness probe for the container `HEALTHCHECK` and uptime monitoring —
+distinct from `GET /health`, which is the versioned client handshake in the contract.
+
+**Any real deployment must set** `EMBASSY_ADMIN_PASSWORD` (never ship `changeme`) and add the
+deployed game-client origin to `EMBASSY_CORS_ORIGINS`.
+
+## Releases
+
+Images are published to GitHub Container Registry by tag-triggered CI
+(`.github/workflows/release.yml`). Cutting a numbered tag is the build signal:
+
+```bash
+git tag v0.1.0 && git push origin v0.1.0
+# CI builds and pushes ghcr.io/<owner>/crawl-records:0.1.0  (+ :latest)
+```
+
+Deployment onto home infra is a separate, deliberate step that pins the exact version — see
+the `local-infra` repo (`hosts/bob/compose/crawl-records/`). Keep this repo's `pyproject.toml`
+`version` roughly in step with the tags.
+
 ## Regenerating the API contract
 
 ```bash

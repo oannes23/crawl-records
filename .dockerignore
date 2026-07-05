@@ -1,0 +1,20 @@
+# Keep the build context lean and, critically, keep the dev SQLite DB and any secrets
+# out of the image. Only what the runtime needs is copied by the Dockerfile anyway.
+.git
+.github
+.venv
+**/__pycache__
+**/*.pyc
+.pytest_cache
+.ruff_cache
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+.env
+.env.*
+tests
+docs
+*.md
+Dockerfile
+.dockerignore

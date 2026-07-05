@@ -39,6 +39,18 @@ def health(settings: Settings = Depends(get_settings)) -> HealthResponse:
     )
 
 
+@router.get("/healthz", include_in_schema=False)
+def healthz() -> dict[str, str]:
+    """Liveness probe for container HEALTHCHECK / uptime monitoring.
+
+    Deliberately NOT part of the wire contract (``include_in_schema=False`` keeps it out
+    of ``openapi.json``) and deliberately does no DB work: it answers only "the process is
+    up and serving", nothing more. ``/health`` above is the separate, contract-bound
+    version handshake the client reads — don't conflate the two.
+    """
+    return {"status": "ok"}
+
+
 @router.get("/handle/available", response_model=HandleAvailableResponse)
 def handle_available(
     name: str = Query(..., min_length=1, max_length=64),
