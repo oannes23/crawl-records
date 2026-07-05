@@ -1,6 +1,6 @@
 [project]
 name = "set-embassy"
-version = "0.1.0"
+version = "0.1.1"
 description = "The Embassy service — the online backend for SET.crawl (run ingest, daily challenge, personal bests)."
 readme = "README.md"
 requires-python = ">=3.11"

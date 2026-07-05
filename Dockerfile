@@ -26,6 +26,9 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --frozen --no-dev --no-install-project
 
 # Layer 2 — the application (+ alembic migrations, admin templates travel inside app/).
+# LICENSE + README are copied too: pyproject references them (license/readme metadata), so
+# hatchling needs them present to build the project in the install step below.
+COPY LICENSE README.md ./
 COPY app ./app
 COPY alembic ./alembic
 COPY alembic.ini ./alembic.ini

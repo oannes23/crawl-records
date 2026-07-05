@@ -16,5 +16,6 @@
 tests
 docs
 *.md
+!README.md
 Dockerfile
 .dockerignore
